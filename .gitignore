@@ -2,6 +2,7 @@
 *.pyw
 untitled*
 temporary*
+source_files*
 *.rpy
 *.rpy.*
 *.log
