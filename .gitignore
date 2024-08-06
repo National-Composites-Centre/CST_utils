@@ -13,6 +13,7 @@ modules/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+source_files/
 *.py[cod]
 *$py.class
 
