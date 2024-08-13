@@ -107,6 +107,25 @@ def NEL(node,e,scale):
         is_el = False
 
     return(is_el)
+def MTS(AM):
+    #check for edge points by point connections instead
+    nodes = []
+    counts = []
+    for el in AM.meshElements:
+        for pt in el.nodes:
+            if pt not in nodes:
+                counts.append(1)
+                nodes.append(pt)
+            if pt in nodes:
+                for i,n in enumerate(nodes):
+                    if n == pt:
+                        counts[i] = counts[i]+1
+    edge_nodes = []
+    for i,n in enumerate(nodes):
+        if counts[i] < 4:
+            edge_nodes.append(n)
+
+    return(edge_nodes)
 
 def meshToSpline(AM):
 
@@ -116,7 +135,7 @@ def meshToSpline(AM):
     #for all nodes
     edge_points = []
     for i, EL in enumerate(AM.meshElements):
-        print("EL",i)
+        #print("EL",i)
         #print("edge_points",edge_points)
         #print("break ____________________________\n\n\n __________________break")
         #print("checked points",cp)
@@ -125,7 +144,8 @@ def meshToSpline(AM):
             #check if touched
             pt_str = str(pt.x) +","+str(pt.y)+","+str(pt.z)
             if pt_str in cp:
-                print("node checked")
+                #print("node checked")
+                pass
             else:
                 #c = method_reverse_lookup([pt_str],cp)
                 #if c == -1:
@@ -218,7 +238,7 @@ def meshToSpline(AM):
                 #check if all circle points in linked elements
                 #for circle point
                 nodes_out_of_elem = 0
-                print("len c_pt",len(c_pt))
+                #print("len c_pt",len(c_pt))
                 #For every node on the circle
                 for c in c_pt:
                     node_in_el = False
@@ -229,7 +249,7 @@ def meshToSpline(AM):
                             #This node belongs to this element
                             node_in_el = True
                             break
-                    print(bl)
+                    #print(bl)
 
                     if node_in_el == False:
 
@@ -253,7 +273,7 @@ def meshToSpline(AM):
     #add to JSON
     return(edge_points)
 
-AreaMesh = import_stl_v1("source_files\\WO4502_MD_14_only.stl")
-meshToSpline(AreaMesh)
+#AreaMesh = import_stl_v1("source_files\\WO4502_MD_14_only.stl")
+#meshToSpline(AreaMesh)
 
 

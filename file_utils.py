@@ -3,6 +3,31 @@ from stl import mesh
 import CompositeStandard as cs
 from pydantic import BaseModel
 from jsonic import serialize, deserialize
+from CATIA_utils import CAT_points
+
+
+def clean_json(strin):
+    #strin = input json string to clean
+    s = strin.replace("{","\n{\n")
+    s = s.replace("}","\n}\n")
+
+
+    tabs = 0
+    new_str = ""
+    for line in s.split("\n")[:]:
+        
+        if "}" in line:
+            tabs = tabs - 1
+
+        for ii in range(0,tabs):
+            new_str += "   "
+        new_str += line+"\n"
+
+        if "{" in line:
+            tabs = tabs + 1
+    #returns a human readable JSON
+    return(new_str)
+
 
 def import_stl_v1(file):
     #v1 simply stores elements as list of points
@@ -169,7 +194,7 @@ with open("TESTING_SPLIT.json", 'w') as out_file:
     out_file.write(json_str)
 
 '''
-from CATIA_utils import CAT_points
+
 
 def read_show(file="TESTING_SPLIT.json"):
 
@@ -201,5 +226,5 @@ def read_show(file="TESTING_SPLIT.json"):
 
 
 
-read_show()
+#read_show()
  
