@@ -108,26 +108,36 @@ def NEL(node,e,scale):
 
     return(is_el)
 def MTS(AM):
+    #this mesh to spline method only works for very uniform meshes with predictable number of connections
+
+    #limit connections - minimum number of connected elements required for inside nodes
+    lc = 5
+
     #check for edge points by point connections instead
     nodes = []
     counts = []
     for el in AM.meshElements:
         for pt in el.nodes:
+            #if this node has not been encountered yet
             if pt not in nodes:
                 counts.append(1)
                 nodes.append(pt)
+            #if node already recorded, add record of another element
             if pt in nodes:
                 for i,n in enumerate(nodes):
                     if n == pt:
                         counts[i] = counts[i]+1
+    #list of nodes that are considered on edge
     edge_nodes = []
     for i,n in enumerate(nodes):
-        if counts[i] < 4:
+        if counts[i] < lc:
             edge_nodes.append(n)
 
     return(edge_nodes)
 
 def meshToSpline(AM):
+    #This is not perfect but it is rather accurate with only some nodes picked up on accident, and minimum nodes missing.
+    #The main issue is the runtime, for large meshes this can take hours.
 
     #checked points
     cp = []
@@ -135,20 +145,14 @@ def meshToSpline(AM):
     #for all nodes
     edge_points = []
     for i, EL in enumerate(AM.meshElements):
-        #print("EL",i)
-        #print("edge_points",edge_points)
-        #print("break ____________________________\n\n\n __________________break")
-        #print("checked points",cp)
+        print("el",i)
         for pt in EL.nodes:
             
             #check if touched
             pt_str = str(pt.x) +","+str(pt.y)+","+str(pt.z)
             if pt_str in cp:
-                #print("node checked")
                 pass
             else:
-                #c = method_reverse_lookup([pt_str],cp)
-                #if c == -1:
                 cp.append(pt_str)
 
                 #create a local list of elements
@@ -228,8 +232,11 @@ def meshToSpline(AM):
                     O = math.sin(a*math.pi/180)*scale
 
                     three_point[0,3] = O*2
-
-                    P1, P2 = trilaterate(three_point[0,0:3],three_point[1,0:3],three_point[2,0:3],three_point[0,3],three_point[1,3],three_point[2,3])
+                    try:
+                        P1, P2 = trilaterate(three_point[0,0:3],three_point[1,0:3],three_point[2,0:3],three_point[0,3],three_point[1,3],three_point[2,3])
+                    except:
+                        print("trilaterate didnt work",three_point[0,0:3],three_point[1,0:3],three_point[2,0:3],three_point[0,3],three_point[1,3],three_point[2,3])
+                        break
                     c_pt.append(P1)
                     c_pt.append(P2)
 
@@ -253,20 +260,12 @@ def meshToSpline(AM):
 
                     if node_in_el == False:
 
-                        #only for bug fixing
-                        #issue = np.asarray([1.363,8.876,81.608])
-                        #dist = np.sqrt((issue[0]-c[0])**2+(issue[1]-c[1])**2+(issue[2]-c[2])**2)
-                        #print(dist)
-                        #if dist < 0.2:
-                        #    bug_fixing(c,loc_elem)
-
                         nodes_out_of_elem += 1
                         if nodes_out_of_elem == 2:
                             break
                 if nodes_out_of_elem == 2:
                     edge_points.append(pt)
-  
-    CAT_points(edge_points)            
+           
 
     #order nodes in edge_spline (by neighbour distance)
 
