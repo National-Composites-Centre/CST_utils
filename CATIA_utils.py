@@ -81,6 +81,8 @@ def display_file(JS):
     body2 = hbs.Add()
     body2.Name="Splines"
 
+    #individual functions for specific objects to be displayed 
+    #To be expanded with CompoST expansion
     for g in D.allGeometry:
         if type(g) == cs.AreaMesh:
             display_AreaMesh(g,part1,HSF,hbs)
@@ -174,6 +176,5 @@ def display_spline(spl,part1,HSF,body2,D):
 
 
 
-JS ="D:\\CAD_library_sampling\\CompoST_examples\\NO_IP\\x_test_140.json"
-display_file(JS)
 
+#display_file("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v067\\x_test_141.json")

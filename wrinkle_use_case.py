@@ -10,15 +10,23 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
     #Import pre-existent layup definition file
 
     #open file
-    with open(path+filename+"_layup.json","r") as in_file:
+    with open(path+"\\"+filename+"_layup.json","r") as in_file:
         json_str= in_file.read()
 
     #turn file into workable classes
     D = deserialize(json_str,string_input=True)
 
     #Open csv with wrinkle info (TODO store directly to CompoST)
-    with open(path+filename+"_wrinkle.csv","r") as exc:
+    with open(path+"\\"+filename+"_wrinkle.csv","r") as exc:
         excT = exc.read()
+
+    #Create a stage for defect storage
+
+    if D.allStages == None:
+        D.allStages = []
+
+    stage = cs.PlyScan(stageID = len(D.allStages)+1,sourceSystem = cs.SourceSystem(softwareName = "Polyworks"))
+    D.allStages.append(stage)
 
     #each row represents individual wrinkle
     for line in excT.split("\n")[1:]:
@@ -26,7 +34,7 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
         if line.count(",") > 2:
             print(line.split(",")[1])
             #find sequence - for now assuming defects are fully through thicknesss
-            for c in D.rootElements:
+            for c in D.allComposite:
                 if type(c) == cs.Sequence:
                     #if no defects have been stored yet,initiate the list
                     if c.defects == None:
@@ -36,10 +44,10 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
                     wrinkle = cs.Wrinkle(ID = D.fileMetadata.maxID + 1)
                     wrinkle.area = float(line.split(",")[2])
                     wrinkle.location = [float(line.split(",")[3]),float(line.split(",")[4]),float(line.split(",")[5])]
-                    wrinkle.source = cs.SourceSystem(softwareName = "Polyworks")
                     wrinkle.maxRoC = float(line.split(",")[15])
                     wrinkle.size_x = float(line.split(",")[12])
                     wrinkle.size_y = float(line.split(",")[13])
+                    wrinkle.stageID = stage.stageID
 
                     #Defect object ID will be added so maxID has to increase for the below
                     D.fileMetadata.maxID += 1
@@ -47,11 +55,12 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
                     #find a file corresponding to specific wrinkle - based on listed Polywork export ID
                     pID = line.split(",")[1]
                     typeW = line.split(",")[0]
-                    fl = path+"defects\\"+typeW +" Defect "+pID+".stl"
+                    fl = path+"\\"+"defects\\"+typeW +" Defect "+pID+".stl"
 
                     #TODO can also store ref. to file
 
                     #try opening the file
+                    print("fl",fl)
                     try:
                         #extract the mesh in CompositeStandard format
                         AM = import_stl_v1(fl)
@@ -69,7 +78,7 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 
                             #This option uses number of element-node associations - works better for consistent and simple meshes
                             EP = MTS(AM)
-                            
+
                             #store the relimitation spline and reference it in defect
                             D.allGeometry.append(cs.Spline(points = EP,ID = D.fileMetadata.maxID + 1))
                             wrinkle.splineRelimitationRef = D.fileMetadata.maxID + 1
@@ -82,7 +91,15 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
                             D.allGeometry.append(AM)
                             wrinkle.meshRef = AM.ID
 
-                    c.defects.append(wrinkle)
+                        if (meshStore == False) and (splStore == False):
+                            wrinkle.file = "defects\\"+typeW +" Defect "+pID+".stl"
+                    if D.allDefects == None:
+                        D.allDefects = [wrinkle]
+                    else:
+                        D.allDefects.append(wrinkle)
+
+                    
+                    c.defects.append(D.allDefects[len(D.allDefects)-1])
         else:
             #breaks out if lines are empty
             break
@@ -95,8 +112,8 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 
     #save the JSON
     #save as file
-    print("saving as:",path+filename+".json")
-    with open(path+filename+".json", 'w') as out_file:
+    print("saving as:",path+"\\"+filename+".json")
+    with open(path+"\\"+filename+".json", 'w') as out_file:
         out_file.write(json_str)
 
 #binary choice of storing the Mesh itself in JSON for each defects
@@ -105,6 +122,8 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 #binary choise weather slipe should be generated to delimit defects
 #splStore = False
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\NO_IP\\"
-filename = "x_test_140"
+#path = "D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized_v067_no_spline\\"
+#filename = "WO4502"
+path = "D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b"
+filename = "x_test_141"
 store_wrinkle(path,filename,splStore = True,meshStore = True)
