@@ -3,7 +3,7 @@ from stl import mesh
 import CompositeStandard as cs
 from pydantic import BaseModel
 from jsonic import serialize, deserialize
-from CATIA_utils import CAT_points
+from CATIA.CATIA_utils import CAT_points
 
 
 def clean_json(strin):

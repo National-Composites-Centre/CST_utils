@@ -1,8 +1,8 @@
 #mts- mesh-to-spline conversion
 
 from utils import  method_reverse_lookup
-from file_utils import import_stl_v1
-from CATIA_utils import bug_fixing, CAT_points
+from STL.file_utils import import_stl_v1
+from CATIA.CATIA_utils import bug_fixing, CAT_points
 import numpy as np
 import math
 from sympy import Plane, Point, Point3D 

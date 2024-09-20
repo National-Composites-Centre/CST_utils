@@ -1,9 +1,10 @@
 
 from jsonic import serialize, deserialize
+
+from CATIA.CATIA_utils import CAT_points
+from STL.file_utils import import_stl_v1, clean_json
+from STL.mts import MTS, meshToSpline
 import CompositeStandard as cs
-from CATIA_utils import CAT_points
-from file_utils import import_stl_v1, clean_json
-from mts import MTS, meshToSpline
 
 
 def store_wrinkle(path,filename,meshStore = False, splStore = False):
@@ -124,6 +125,6 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 
 #path = "D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized_v067_no_spline\\"
 #filename = "WO4502"
-path = "D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b"
+path = "D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-2"
 filename = "x_test_141"
 store_wrinkle(path,filename,splStore = True,meshStore = True)
