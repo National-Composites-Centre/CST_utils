@@ -140,21 +140,43 @@ def display_point(pt,part1,HSF,body1):
 
 def display_spline(spl,part1,HSF,body2,D):
 
-    
+    ref_list = []
     # Starting new spline f
     spline2 = HSF.AddNewSpline()
     spline2.SetSplineType(0)
-    spline2.SetClosing(1)
+    if (spl.breaks != None) and (spl.breaks != []):
+        spline2.SetClosing(0)
+        
+    else:
+        spline2.SetClosing(1)
 
     #For points stored directly under spline
     if spl.points != None:
-        for p in spl.points:
+        for i,p in enumerate(spl.points):
             point=HSF.AddNewPointCoord(p.x,p.y,p.z)
             spline2.AddPoint(point)
 
+            #if the current point is marked in breaks, finish spline and start a new one
+            if spl.breaks != None:
+                if (i in spl.breaks) and (i != len(spl.points)-1):
+                    #Submit the spline and create reference.
+                    body2.AppendHybridShape(spline2) 
+                    spline2.Name="ID"+str(spl.ID)+"breakAt_"+str(i)
+                    rs2 = part1.CreateReferenceFromObject(spline2) 
+                    ref_list.append(rs2)
+
+                    spline2 = HSF.AddNewSpline()
+                    spline2.SetSplineType(0)
+
+                    #add same point as a start
+                    point = HSF.AddNewPointCoord(p.x,p.y,p.z)
+                    point.Name="ID"+str(p.ID)
+                    spline2.AddPoint(point)
+
+
     #For list of points stored as ID refernces only
     elif spl.pointRefs != None:
-        for p in spl.pointRefs:
+        for i,p in enumerate(spl.pointRefs):
             for O in D.allGeometry:
                 try:
                     if O.ID == p:
@@ -167,14 +189,66 @@ def display_spline(spl,part1,HSF,body2,D):
             point.Name="ID"+str(pt.ID)
             spline2.AddPoint(point)
 
+            #if the current point is marked in breaks, finish spline and start a new one
+            if spl.breaks != None:
+                if (i in spl.breaks) and (i != len(spl.points)-1):
+                    #Submit the spline and create reference.
+                    body2.AppendHybridShape(spline2) 
+                    spline2.Name="ID"+str(spl.ID)+"breakAt_"+str(i)
+                    rs2 = part1.CreateReferenceFromObject(spline2) 
+                    ref_list.append(rs2)
+
+                    spline2 = HSF.AddNewSpline()
+                    spline2.SetSplineType(0)
+
+                    #add same point as a start
+                    point = HSF.AddNewPointCoord(pt.x,pt.y,pt.z)
+                    point.Name="ID"+str(pt.ID)
+                    spline2.AddPoint(point)
+
+
+    #if breaks were employed first point has to be added
+    if spl.breaks != None:
+        p = spl.points[0]
+        point = HSF.AddNewPointCoord(p.x,p.y,p.z)
+        point.Name="ID"+str("__0__")
+        spline2.AddPoint(point)
+
+
 
     #Submit the spline and create reference.
     body2.AppendHybridShape(spline2) 
     spline2.Name="ID"+str(spl.ID)
     rs2 = part1.CreateReferenceFromObject(spline2) 
+    ref_list.append(rs2)
+
+    #merge splienes
+    if len(ref_list) > 1:
+        
+        #initiate assembly
+        asm = HSF.AddNewJoin(ref_list[0], ref_list[1])
+        i = 2
+        #depending on number of breaks add other pieces
+        while i < len(ref_list):
+            asm.AddElement(ref_list[i])
+            i = i + 1 
+
+        asm.SetConnex(1)
+        asm.SetManifold(1)
+        asm.SetSimplify(0)
+        asm.SetSuppressMode(0)
+        asm.SetDeviation(0.001000)
+        asm.SetAngularToleranceMode(0)
+        asm.SetAngularTolerance(0.500000)
+        asm.SetFederationPropagation(0)
+        body2.AppendHybridShape(asm)
+        #rename
+        asm.Name="ID"+str(spl.ID)+"_asm"
+        
+
     return()
 
 
 
 
-#display_file("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v067\\x_test_141.json")
+display_file("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-3\\x_test_141_layup.json")

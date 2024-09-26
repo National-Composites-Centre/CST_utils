@@ -5,7 +5,36 @@ from CATIA.CATIA_utils import CAT_points
 from STL.file_utils import import_stl_v1, clean_json
 from STL.mts import MTS, meshToSpline
 import CompositeStandard as cs
+import h5py
 
+import numpy as np
+
+
+def save_to_hdf5(obj, file_name):
+    
+    #HDF5 DOES NOT CURRENTLY WORK -- TODO READ ERRORS IN EXCEPTIONS AND FIGURE OUT WHY IT STRUGGLES TO STORE SOME DATA TYPES
+
+    obj_dict = obj.model_dump()  # Pydantic's model_dump() returns a dictionary
+
+    # Create and save the dictionary to HDF5
+    with h5py.File(file_name, 'w') as f:
+        for key, value in obj_dict.items():
+            # Store simple values directly
+            if isinstance(value, (int, float, str)):
+                if value != None:
+                    print("value",value)
+                    try:
+                        f.attrs[key] = value
+                    except:
+                        print("error occured")
+            # Store list or array data as datasets
+            elif isinstance(value, list):
+                if value != None:
+                    print("value",value)
+                    try:
+                        f.create_dataset(key, data=value)
+                    except:
+                        print("error 2 occured")
 
 def store_wrinkle(path,filename,meshStore = False, splStore = False):
     #Import pre-existent layup definition file
@@ -117,6 +146,8 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
     with open(path+"\\"+filename+".json", 'w') as out_file:
         out_file.write(json_str)
 
+    #save_to_hdf5(D, path+"\\"+filename+".h5")
+
 #binary choice of storing the Mesh itself in JSON for each defects
 #meshStore = False
 
@@ -127,4 +158,4 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 #filename = "WO4502"
 path = "D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-2"
 filename = "x_test_141"
-store_wrinkle(path,filename,splStore = True,meshStore = True)
+store_wrinkle(path,filename,splStore = False,meshStore = False)
