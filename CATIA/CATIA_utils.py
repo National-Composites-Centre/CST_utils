@@ -251,4 +251,4 @@ def display_spline(spl,part1,HSF,body2,D):
 
 
 
-display_file("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-3\\x_test_141_layup.json")
+#display_file("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-3\\x_test_141_layup.json")

@@ -8,7 +8,7 @@ import CompositeStandard as cs
 import h5py
 
 import numpy as np
-
+from utils import reLink
 
 def save_to_hdf5(obj, file_name):
     
@@ -45,6 +45,8 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 
     #turn file into workable classes
     D = deserialize(json_str,string_input=True)
+    
+    D = reLink(D) #TODO UNTESTED - CHECK IT WORKS
 
     #Open csv with wrinkle info (TODO store directly to CompoST)
     with open(path+"\\"+filename+"_wrinkle.csv","r") as exc:
@@ -158,4 +160,4 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 #filename = "WO4502"
 path = "D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-2"
 filename = "x_test_141"
-store_wrinkle(path,filename,splStore = False,meshStore = False)
+store_wrinkle(path,filename,splStore = True,meshStore = True)
