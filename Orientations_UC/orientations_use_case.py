@@ -28,6 +28,13 @@ def store_FO(path,filename,ply_ID,zone=None):
     #Create FibreOrientations object
     fo = cs.FibreOrientations(lines=[],orientations=[])
 
+    #Create a stage for defect storage
+    if D.allStages == None:
+        D.allStages = []
+
+    stage = cs.PlyScan(stageID = len(D.allStages)+1,sourceSystem = cs.SourceSystem(softwareName = "Polyworks"))
+    D.allStages.append(stage)
+
 
     #find spline for the full part (currently for full part)
 

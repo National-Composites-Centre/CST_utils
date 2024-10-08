@@ -11,7 +11,6 @@ from pydantic.config import ConfigDict
 import json
 from jsonic import serialize, deserialize
 
-
 #### VERSION 0.68c ####
 #https://github.com/National-Composites-Centre/CompoST
 
@@ -263,6 +262,10 @@ class PlyScan(Stage):
 
     machine: Optional[str] = Field(default=None) #designation name of the machine underataking scanning 
     binderActivated: Optional[str] = Field(default=None) # bool
+
+class FibreOrientationTolerance(Tolerance):
+    
+    avDiffToNominal: Optional[float] = Field(default=None) #average difference to intended ply orientation based off all sampling points within relimitation
 
 class Zone(CompositeDBItem):
 
