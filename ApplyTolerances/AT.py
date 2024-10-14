@@ -5,16 +5,11 @@ import importlib
 from utils import reLink
 from STL.file_utils import clean_json
 from jsonic import serialize, deserialize
+from CATIA.CATIA_utils import display_file
+import tkinter.messagebox as msg
+import itertools
+import win32com.client.dynamic
 #apply tolerances
-
-
-#open UI with drop-down offering available tolerance definitions
-
-
-
-
-
-#when 1 is selected fields are provided based on paramaters available
 
 #spline relim, can be taken from loaded file (have design at the start of this process)
 
@@ -41,19 +36,10 @@ print(toll)
 
 
 
-#create a drop-down in the UI to load toll into
-
-
-#use __getvar__ to obtain editable variables  to fill 
-
-
 #use load definition in CATIA and store objects shown in FLAT dictionary with IDs
 
 
 #when stored, append object to selected ID  --- CATIA used to match ID in user friendly manner
-
-
-#
 
 
 
@@ -70,6 +56,8 @@ class TolLine(BaseModel):#
     value_button: Optional[object] = Field(None)
     tol_obj: Optional[object] = Field(None)
     var_inputs: Optional[list[object]] = Field(None)
+    cat_button: Optional[object] = Field(None)
+    relim: Optional[str] = Field(None)
 
 def SaveTols(D,yp_list):
 
@@ -82,6 +70,25 @@ def SaveTols(D,yp_list):
     for tol in yp_list:
         ID = ID + 1
         tol.tol_obj.ID = ID
+        
+
+        #TODO Somewhere instruct user not to name CATIA objects using ID...
+        if "ID" in tol.relim:
+            #find the relimitation object (in geometry)
+            for g in D.allGeometry:
+                if str(g.ID) == tol.relim.split("ID")[1]:
+                    tol.splineRelimiation = g
+                    tol.splineRelimitationRef = g.ID
+
+        else:
+            #in case the object was manually created in the just opened CATIA window
+
+            print("TODO -- add points and spliens as per LD ")
+                    #save splines 
+
+                    #for each create a new button that relimits the tolerance 
+                #default name not to be stored TODO 
+
         D.allTolerances.append(tol.tol_obj)
 
     #save max ID
@@ -242,9 +249,62 @@ def AddTolLine(yP_var,yp_list):
     yp_list.append(t)
     button.place(x=20,y=button.winfo_y()+30)
     buttonS.place(x=20,y=buttonS.winfo_y()+30)
+    button5.place(x=20,y=button5.winfo_y()+30)
     #print(yp_list)
 
+def CAT_selection(rp,yp_list,CATIA):
 
+    c_doc = CATIA.ActiveDocument
+    c_sel = c_doc.Selection
+    
+    # New part where the feature should be pasted
+    #new_prod = c_prod.Products.AddNewComponent("Part", "")
+    #new_part_doc = new_prod.ReferenceProduct.Parent
+    
+    for yp in yp_list:
+        if rp == yp.ref_pos:
+            #from user selection
+            try:
+                sel_obj = c_sel.Item(1).Value.Name
+
+                yp.relim = str(sel_obj)
+                yp.cat_button.configure(text = str(sel_obj))
+ 
+            except:
+                print("please select an object first")
+                #content=Button(text='please select an object first')
+                #popup = Popup(title='User info', content=content,auto_dismiss=False,size_hint=(1.5, 0.15))
+                #content.bind(on_press=popup.dismiss)
+                #popup.open()
+
+    print("o")
+
+def enableCATIA(D,yp_list,filename,path):
+
+
+    if (button5["text"] == "CATIA interactive - detivate"):
+        button5.configure(text = "CATIA interactive - activate")
+        
+    else:
+
+        #ttk pop-up to check the user has started CATIA
+        msg.showwarning(title="User interaction",message="Please make sure CATIA is already running with a Part window open, then click ok. (Empty part is fine)")
+
+        #TODO switch colour of the button to green
+        button5.configure(text = "CATIA interactive - deactivate")
+        
+        #loop through yp_list
+        for yp in yp_list:
+            #if button not available
+            if yp.cat_button == None:
+                yp.cat_button = ttk.Button(my_frame,text="[select]",command = lambda yp=yp: CAT_selection(yp.ref_pos ,yp_list,CATIA))
+                yp.cat_button.place(x=570,y=yp.ref_pos)
+
+        #load CATIA part
+        CATIA = display_file(D)
+
+    
+    print("u")
 
 path = "D:\\CAD_library_sampling\\CompoST_examples\\orientation_map_example"
 filename = "sq_test_001"
@@ -261,7 +321,7 @@ D = reLink(D)
 # create app
 root = tk.Tk()
 root.title("Tolerance definitions")
-root.geometry("610x610+150+150")
+root.geometry("710x610+150+150")
 
 yP_var = IntVar(value=0)
 yp_list = []
@@ -276,6 +336,9 @@ button.place(x=20,y=50)
 
 buttonS = ttk.Button(my_frame,text="Save All",command = lambda: SaveTols(D,yp_list))
 buttonS.place(x=20,y=80)
+
+button5 = ttk.Button(my_frame,text="CATIA interactive - activate", command = lambda: enableCATIA(D,yp_list,filename,path))
+button5.place(x=20,y=110)
 
 root.mainloop()
 

@@ -265,7 +265,7 @@ class PlyScan(Stage):
 
 class FibreOrientationTolerance(Tolerance):
     
-    avDiffToNominal: Optional[float] = Field(default=None) #average difference to intended ply orientation based off all sampling points within relimitation
+    max_avDiffToNominal: Optional[float] = Field(default=None) #average difference to intended ply orientation based off all sampling points within relimitation
 
 class Zone(CompositeDBItem):
 

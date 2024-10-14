@@ -57,14 +57,8 @@ def CAT_points(points,seg=0):
 
 #next few are display tools 
 
-def display_file(JS):
+def display_file(D):
 
-    #open file
-    with open(JS,"r") as in_file:
-        json_str= in_file.read()
-    
-    print(json_str)
-    D = deserialize(json_str,string_input=True)
 
     #Initiate CATIA interaction
     CATIA = win32com.client.dynamic.DumbDispatch('CATIA.Application')
@@ -92,6 +86,8 @@ def display_file(JS):
 
         if type(g) == cs.Spline:
             display_spline(g,part1,HSF,body2,D)
+
+    return(CATIA)
 
 
 def display_AreaMesh(AM,part1,HSF,hbs):
@@ -248,7 +244,13 @@ def display_spline(spl,part1,HSF,body2,D):
 
     return()
 
+'''
+#open file
+with open("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-3\\x_test_141_layup.json","r") as in_file:
+    json_str= in_file.read()
 
+#print(json_str)
+D = deserialize(json_str,string_input=True)
 
-
-#display_file("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-3\\x_test_141_layup.json")
+#display_file(D)
+'''
