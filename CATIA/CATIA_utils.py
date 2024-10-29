@@ -1,6 +1,19 @@
 import win32com.client.dynamic
 from jsonic import serialize, deserialize
 import CompositeStandard as cs
+from pydantic import BaseModel, Field
+from typing import Optional
+
+
+class CATIA_ctrl(BaseModel):
+    #this is made simply to pass around info around loaded CATIA
+    bodies: Optional[object] = Field(None)
+    CAT: Optional[object] = Field(None)
+    HSF: Optional[object] = Field(None)
+    doc: Optional[object] = Field(None)
+    part: Optional[object] = Field(None)
+    b_list: Optional[list[object]] = Field(None) # list of bodies 
+    cat_name: Optional[str] = Field(None) #active document name
 
 def bug_fixing(pt, loc_elem):
 
@@ -59,35 +72,41 @@ def CAT_points(points,seg=0):
 
 def display_file(D):
 
+    #package CATIA setup for moving it around
+    C = CATIA_ctrl()
 
     #Initiate CATIA interaction
-    CATIA = win32com.client.dynamic.DumbDispatch('CATIA.Application')
-    partDocument2 = CATIA.ActiveDocument
-    cat_name = CATIA.ActiveDocument.Name
+    C.CAT = win32com.client.dynamic.DumbDispatch('CATIA.Application')
+    C.doc = C.CAT.ActiveDocument
+    C.cat_name = C.CAT.ActiveDocument.Name
 
-    part1 = partDocument2.Part
-    HSF = part1.HybridShapeFactory
+    C.part = C.doc.Part
+    C.HSF = C.part.HybridShapeFactory
 
-    hbs = part1.HybridBodies
-    body1 = hbs.Add()
+    C.bodies = C.part.HybridBodies
+
+    C.b_list = []
+    body1 = C.bodies.Add()
     body1.Name="Points"
+    C.b_list.append(body1)
 
-    body2 = hbs.Add()
+    body2 = C.bodies.Add()
     body2.Name="Splines"
+    C.b_list.append(body2)
 
     #individual functions for specific objects to be displayed 
     #To be expanded with CompoST expansion
     for g in D.allGeometry:
         if type(g) == cs.AreaMesh:
-            display_AreaMesh(g,part1,HSF,hbs)
+            display_AreaMesh(g,C.part,C.HSF,C.bodies)
 
         if type(g) == cs.Point:
-            display_point(g,part1,HSF,body1)
+            display_point(g,C.part,C.HSF,body1)
 
         if type(g) == cs.Spline:
-            display_spline(g,part1,HSF,body2,D)
+            display_spline(g,C.part,C.HSF,body2,D)
 
-    return(CATIA)
+    return(C)
 
 
 def display_AreaMesh(AM,part1,HSF,hbs):
@@ -243,6 +262,74 @@ def display_spline(spl,part1,HSF,body2,D):
         
 
     return()
+
+def SurfaceGen(AM):
+
+    #Not used in the end because of the fidelity of provided data
+
+    #Can be continued according to notes below if .stl with reasonable size is provided
+
+    #package CATIA setup for moving it around
+    C = CATIA_ctrl()
+
+    #Initiate CATIA interaction
+    C.CAT = win32com.client.dynamic.DumbDispatch('CATIA.Application')
+    C.doc = C.CAT.ActiveDocument
+    C.cat_name = C.CAT.ActiveDocument.Name
+
+    C.part = C.doc.Part
+    C.HSF = C.part.HybridShapeFactory
+
+    C.bodies = C.part.HybridBodies
+
+    b_list = []
+    body1 = C.bodies.Add()
+    body1.Name="SG"
+    b_list.append(body1)
+
+    body2 = C.bodies.Add()
+    body2.Name="MainSurface"
+    b_list.append(body2)
+
+    #initiate assembly
+
+
+    #for each element
+        #create surface 
+
+        #append to assembly
+
+    #finalize assembly
+
+    #loop through lenght of the part
+
+        #create a plane
+
+        #intersect with assembly 
+
+        #save intersect to list
+
+    
+
+    #for each intersect in the loft 
+    #    no_p = 30
+    
+    #    i = 0
+        #initiate spline
+    #    while i < no_p+1:
+            #create points and append to spline
+            
+    #        hpc1 = HSF.AddNewPointOnCurveWithReferenceFromPercent(ref1, ref2, i/no_p, False)
+
+        #finalize spline, add to spl list
+        
+
+    #initiate loft
+
+        #for each intersect in the spl list, add to loft
+
+    #how is the surface?
+    print("x")
 
 '''
 #open file

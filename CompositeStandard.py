@@ -96,7 +96,7 @@ class CompositeDB(BaseModel):
     allGeometry: Optional[list['GeometricElement']] = Field(default=None) # list of "GeometricElement" objects - all = exhaustive list
     allStages: Optional[list] = Field(default=None) #??? manuf process - all = exhaustive list
     allMaterials: Optional[list['Material']] = Field(default=None) #List of "Material" objects - all = exhaustive list
-    allDefects: Optional[list['Material']] = Field(default=None) # list of all defects
+    allDefects: Optional[list['Defect']] = Field(default=None) # list of all defects
     allTolerances: Optional[list['Tolerance']] = Field(default = None) # list of all Tolerances
     fileMetadata: FileMetadata = Field(default = FileMetadata()) #list of all "axisSystems" objects = exhaustive list
 
@@ -181,7 +181,7 @@ class MeshElement(BaseModel):
     normal: list = Field(None) #x,y,z in the list
 
 class AreaMesh(GeometricElement):
-    meshElements: list[MeshElement] = Field(None) # requires element classes only
+    meshElements: list['MeshElement'] = Field(None) # requires element classes only
     
 class Spline(GeometricElement):
     #can either be defined directly here as 3xX array, or can be defined as a list of points (not both)
@@ -209,6 +209,7 @@ class Wrinkle(Defect):
     splineRelimitationRef: Optional[int] = Field(None) #points collected as spline relimiting the defect
     splineRelimitation: Optional['Spline'] = Field(None)
     meshRef: Optional[int] = Field(None) # area covered by defect expressed in mesh format (area or volume)
+    amplitude: Optional[float] = Field(None) #out of plane maxiumum size of the defect
 
 class FibreOrientations(Defect):
 
@@ -236,6 +237,32 @@ class WrinkleTolerance(Tolerance):
     maxArea: Optional[float] = Field(None)
     maxSlope: Optional[float] = Field(None)
     maxSkew: Optional[float] = Field(None) #TODO define
+    maxAmplitude: Optional[float] = Field(None)
+
+class Delamination(Defect):
+
+    #Delamination occurs between two layers/plies, the convention is to append it to the one that is in the tool direction.
+
+    size_x: Optional[float] = Field(None) #length in x axis direction
+    size_y: Optional[float] = Field(None) #length in y axis direction
+    area: Optional[float] = Field(None)  
+
+class DelaminationTolerance(Tolerance):
+
+    maxX: Optional[float] = Field(None) #maximum length in x axis direction
+    maxY: Optional[float] = Field(None) #maximum length in y axis direction
+    maxArea: Optional[float] = Field(None) #maximume allowed area per defect
+
+class BoundaryDeviation(Defect):
+    
+    maxDeviation: Optional[float] = Field(None) #maximum distance of a measured point from intended boundary
+    avDeviation: Optional[float] = Field(None) #average deviation along the boundary
+
+class BoundaryTolerance(Defect):
+
+    maxAllowedDev: Optional[float] = Field(None) #maximum allowed distance of a measured point from intended boundary
+    maxAv: Optional[float] = Field(None) #
+
 
 
 #
