@@ -10,9 +10,8 @@ from pydantic.config import ConfigDict
 
 import json
 from jsonic import serialize, deserialize
-import h5py
 
-#### VERSION 0.68b ####
+#### VERSION 0.68c ####
 #https://github.com/National-Composites-Centre/CompoST
 
 #potentially replace by JSON parser for Pydantic
@@ -24,7 +23,6 @@ import h5py
 #Therefore for now ID is not directly specified but is inherent in the list it belongs to)
 
 
-#IS THIS EVEN NEDED TODO
 class CompositeDBItem(BaseModel):
 
     memberName: Optional[str] = Field(default = None)
@@ -75,7 +73,7 @@ class FileMetadata(BaseModel):
     lastModified: Optional[str] = Field(default=None) #Automatically refresh on save - string for json parsing
     lastModifiedBy: Optional[str] = Field(default=None) #String name
     author: Optional[str] = Field(default=None) #String Name
-    version: Optional[str] = Field(default= "0.68b") #eg. - type is stirng now, for lack of better options
+    version: Optional[str] = Field(default= "0.68c") #eg. - type is stirng now, for lack of better options
     layupDefinitionVersion: Optional[str] = Field(default=None)
 
     #external file references - separate class?
@@ -98,8 +96,8 @@ class CompositeDB(BaseModel):
     allGeometry: Optional[list['GeometricElement']] = Field(default=None) # list of "GeometricElement" objects - all = exhaustive list
     allStages: Optional[list] = Field(default=None) #??? manuf process - all = exhaustive list
     allMaterials: Optional[list['Material']] = Field(default=None) #List of "Material" objects - all = exhaustive list
-    allDefects: Optional[list['Material']] = Field(default=None) # list of all defects
-    allTolerances: Optional[list['Tolerances']] = Field(default = None) # list of all Tolerances
+    allDefects: Optional[list['Defect']] = Field(default=None) # list of all defects
+    allTolerances: Optional[list['Tolerance']] = Field(default = None) # list of all Tolerances
     fileMetadata: FileMetadata = Field(default = FileMetadata()) #list of all "axisSystems" objects = exhaustive list
 
 class CompositeElement(CompositeDBItem):
@@ -107,7 +105,8 @@ class CompositeElement(CompositeDBItem):
     subComponents: Optional[list['CompositeElement']] = Field(None) # list of subComponents -- all belong to the CompositeElement family
     mappedProperties: Optional[list['CompositeComponent|Sequence|Ply|Piece']] = Field(None) #list of objects - various allowed: Component, Sequence, Ply, Piece
     mappedRequirements: Optional[list] = Field(None) # list of objects - "Requirement"
-    defects: Optional[list] = Field(None) #list of objects - "defects"
+    defects: Optional[list['Defect']] = Field(None) #list of objects - "defects"
+    tolerances: Optional[list['Tolerance']] = Field(None)
     axisSystemID: Optional[int] = Field(None) #ID reference to allAxis systems 
     referencedBy: Optional[list[int]] = Field(None) # list of int>
     status: Optional[str] = Field(None) #TODO
@@ -172,8 +171,9 @@ class Line(GeometricElement):
 
     #Use either IDs or points, not both. IDs recommended if the points 
     # are to be re-used for other geometries.
-    points: Optional[list[Point]] = Field() 
-    IDs: Optional[list[int]] = Field
+    points: Optional[list[Point]] = Field(None) 
+    IDs: Optional[list[int]] = Field(None)
+    lenght: Optional[float] = Field(None) #can be calculated from above, but then can be stored so calcs are not duplicated
 
 class MeshElement(BaseModel):
     #3 or 4 points, check?
@@ -181,7 +181,7 @@ class MeshElement(BaseModel):
     normal: list = Field(None) #x,y,z in the list
 
 class AreaMesh(GeometricElement):
-    meshElements: list[MeshElement] = Field(None) # requires element classes only
+    meshElements: list['MeshElement'] = Field(None) # requires element classes only
     
 class Spline(GeometricElement):
     #can either be defined directly here as 3xX array, or can be defined as a list of points (not both)
@@ -207,8 +207,61 @@ class Wrinkle(Defect):
     size_x: Optional[float] = Field(None) #primary direction size, according to referenced axisSystemID, or global axis if local not available
     size_y: Optional[float] = Field(None)
     splineRelimitationRef: Optional[int] = Field(None) #points collected as spline relimiting the defect
+    splineRelimitation: Optional['Spline'] = Field(None)
     meshRef: Optional[int] = Field(None) # area covered by defect expressed in mesh format (area or volume)
+    amplitude: Optional[float] = Field(None) #out of plane maxiumum size of the defect
 
+class FibreOrientations(Defect):
+
+    lines: Optional[list['Line']] = Field(None) #list of lines collected to denote orientations map
+    orientations: Optional[list[float]] = Field(None) #list of floats corresponding to the "lines" list 
+    averageOrientation: Optional[float] = Field(None) #average of "orientations", does not account for varying lenght of lines
+    avDiffToNominal: Optional[list[float]] = Field(None) #average difference 
+    splineRelimitation: Optional['Spline'] = Field(None) #area for this definition
+    splineRelimitationRef: Optional[int] = Field(None) # same as above, but referenced using 'ID'
+
+
+class Tolerance(CompositeDBItem):
+    #inherited by all specific tolerance definition objects
+
+    appliedToIDs: Optional[list[int]] = Field(None)
+    splineRelimitation: Optional['Spline'] = Field(None) #area for this definition
+    splineRelimitationRef: Optional[int] = Field(None) # same as above, but referenced using 'ID'
+
+class WrinkleTolerance(Tolerance):
+
+    maxZ: Optional[float] = Field(None)
+    maxY: Optional[float] = Field(None)
+    maxX: Optional[float] = Field(None)
+    axisSystemID: Optional[int] = Field(None)
+    maxArea: Optional[float] = Field(None)
+    maxSlope: Optional[float] = Field(None)
+    maxSkew: Optional[float] = Field(None) #TODO define
+    maxAmplitude: Optional[float] = Field(None)
+
+class Delamination(Defect):
+
+    #Delamination occurs between two layers/plies, the convention is to append it to the one that is in the tool direction.
+
+    size_x: Optional[float] = Field(None) #length in x axis direction
+    size_y: Optional[float] = Field(None) #length in y axis direction
+    area: Optional[float] = Field(None)  
+
+class DelaminationTolerance(Tolerance):
+
+    maxX: Optional[float] = Field(None) #maximum length in x axis direction
+    maxY: Optional[float] = Field(None) #maximum length in y axis direction
+    maxArea: Optional[float] = Field(None) #maximume allowed area per defect
+
+class BoundaryDeviation(Defect):
+    
+    maxDeviation: Optional[float] = Field(None) #maximum distance of a measured point from intended boundary
+    avDeviation: Optional[float] = Field(None) #average deviation along the boundary
+
+class BoundaryTolerance(Defect):
+
+    maxAllowedDev: Optional[float] = Field(None) #maximum allowed distance of a measured point from intended boundary
+    maxAv: Optional[float] = Field(None) #
 
 
 
@@ -224,21 +277,6 @@ class Wrinkle(Defect):
 ##
 #
 
-class Tolerances(CompositeDBItem):
-    #inherited by all specific tolerance definition objects
-
-    appliedToIDs: Optional[list[int]] = Field(None)
-
-class WrinkleTolerance(Tolerances):
-
-    maxZ: Optional[float] = Field(None)
-    maxY: Optional[float] = Field(None)
-    maxX: Optional[float] = Field(None)
-    axisSystemID: Optional[int] = Field(None)
-    maxArea: Optional[float] = Field(None)
-    maxSlope: Optional[float] = Field(None)
-    maxSkew: Optional[float] = Field(None) #TODO define
-
 class Stage(BaseModel):
 
     stageID: Optional[int] = Field(default=None) 
@@ -252,11 +290,21 @@ class PlyScan(Stage):
     machine: Optional[str] = Field(default=None) #designation name of the machine underataking scanning 
     binderActivated: Optional[str] = Field(default=None) # bool
 
+class FibreOrientationTolerance(Tolerance):
+    
+    max_avDiffToNominal: Optional[float] = Field(default=None) #average difference to intended ply orientation based off all sampling points within relimitation
 
+class Zone(CompositeDBItem):
+
+    #TODO develop based on use-case requirements
+
+    splineRelimitation: Optional['Spline'] = Field(None) #area for this definition
+    splineRelimitationRef: Optional[int] = Field(None) # same as above, but referenced using 'ID'
 
 def generate_json_schema(file_name:str):
     with open(file_name, 'w') as f:
         f.write(json.dumps(CompositeDB.model_json_schema(), indent=4))
+
 #generate_json_schema('compostSchema.json')
 
 
