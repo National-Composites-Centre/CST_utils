@@ -13,6 +13,7 @@ Welcome to Composite part data Standard (CompoSt)'s documentation!
    Use_Cases
    contributions
    CATIA_Utils
+   Apply_Tolerances
    
 
 

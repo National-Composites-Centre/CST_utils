@@ -1,0 +1,131 @@
+
+
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Apply_Tolerances &#8212; Composite Standard Utilities (CST_utils)  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="CATIA_Utils" href="CATIA_Utils.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="CATIA_Utils.html" title="CATIA_Utils"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Composite Standard Utilities (CST_utils)  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Apply_Tolerances</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="apply-tolerances">
+<h1>Apply_Tolerances<a class="headerlink" href="#apply-tolerances" title="Permalink to this heading">¶</a></h1>
+<p>Similarly to larger layup tool, a tolerance definition tool was created.  This will likely also be part of many commerical offerings, and most users will probably look to export
+this information from there. However, for demonstration use cases open-source option was created.</p>
+<p>The basic UI created is shown in figure below.</p>
+<a class="reference internal image-reference" href="_images/ApplyingTolerances.JPG"><img alt="_images/ApplyingTolerances.JPG" src="_images/ApplyingTolerances.JPG" style="width: 1000px;" /></a>
+<p>User can create a tolerance object by adding a line (using “1”), and selecting type of tolernace (“2”). The drop-down options for (“2”) are collected from ‘CompositeStandard’;
+the object collection is checked for any objects that have ‘CompositeStandard.Tolerance’ as it’s parent.</p>
+<p>The “define” button (“3”) opens an extra tab (“5”), where user can define all relevant tolerance parameters. Again, the options are automatically picked based on selected
+‘CompositeStandard.Tolerance’ object. To edit these variable the pop-up needs to be closed using the “save” button (“6”).</p>
+<p>The “delete” button (“4”) simply removes a line from current tolerance list, including any details saved into the object so far.</p>
+<p>The “CATIA interactive” button (“7”) allows for CATIA interactive object selection. This can be used to define delimitation of area that a tolerance applies to. The button loads current
+JSON file geometries, and creates buttton for each tolerance - this button (“8”) allows for selection of geometry in CATIA window. If bespoke geometry is selected, this is
+turned into point cloud and appended to the tolerance object. If automatically loaded geometry with assigned “ID” is selected, existent object from JSON is simply linked to
+the tolerance at hand. The objects in CATIA have to be selected from the tree (“9”), for now. Selecting the geometry by clicking on the 3D representation tends to save CATIA’s
+internal reference, which is not suitable.</p>
+<p>The “Save All” button (“10”) simply stores all information provided into a new version of JSON CompoST file.</p>
+<section id="current-state">
+<h2>Current_state<a class="headerlink" href="#current-state" title="Permalink to this heading">¶</a></h2>
+<p>Currently no option exists for selecting file through the UI, user needs to edit this in the script.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Apply_Tolerances</a><ul>
+<li><a class="reference internal" href="#current-state">Current_state</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="CATIA_Utils.html"
+                          title="previous chapter">CATIA_Utils</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Apply_Tolerances.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="CATIA_Utils.html" title="CATIA_Utils"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Composite Standard Utilities (CST_utils)  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Apply_Tolerances</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2024, National Composites Centre.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.0.2.
+    </div>
+  </body>
+</html>

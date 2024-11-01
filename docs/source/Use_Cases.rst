@@ -10,3 +10,4 @@ However, to outline the benefits of the implementation, the author's intend to f
    :caption: Contents:
    
    Wrinkle
+   Orientations
