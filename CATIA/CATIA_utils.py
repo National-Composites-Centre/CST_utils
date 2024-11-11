@@ -94,6 +94,10 @@ def display_file(D):
     body2.Name="Splines"
     C.b_list.append(body2)
 
+    body3 = C.bodies.Add()
+    body3.Name="Splines"
+    C.b_list.append(body3)
+
     #individual functions for specific objects to be displayed 
     #To be expanded with CompoST expansion
     for g in D.allGeometry:
@@ -106,8 +110,99 @@ def display_file(D):
         if type(g) == cs.Spline:
             display_spline(g,C.part,C.HSF,body2,D)
 
+        if type(g) == cs.AxisSystem:
+            C = display_AxisSystem(g,C)
+
+        if type(g) == cs.Line:
+            display_line(g,C)
+
     return(C)
 
+def display_AxisSystem(AS,C):
+    #CATIA axis definition causes issue for scripting.
+    #Currently the below displayed as lines instead .
+    #This can be manually created into axis system if needed.
+    #TODO explore the issue with passing arguments to actual axis system object in CATIA
+
+    body1 = C.bodies.Add()
+    if AS.ID != None:
+        body1.Name="AxiSystem_"+"ID_"+str(AS.ID)
+    else:
+        body1.Name="AxiSystem_"+"_ID_NONE"
+    C.b_list.append(body1)
+
+    #Create Origin
+    point0= C.HSF.AddNewPointCoord(AS.o_pt.x,AS.o_pt.y,AS.o_pt.z)
+    body1.AppendHybridShape(point0)
+    r0 = C.part.CreateReferenceFromObject(point0)
+    point0.Name = "o_pt"
+    
+    #Create x axis point
+    point= C.HSF.AddNewPointCoord(AS.x_pt.x,AS.x_pt.y,AS.x_pt.z)
+    body1.AppendHybridShape(point)
+    r1 = C.part.CreateReferenceFromObject(point)
+    point.Name = "x_pt"
+
+    #create y axis point
+    point= C.HSF.AddNewPointCoord(AS.y_pt.x,AS.y_pt.y,AS.y_pt.z)
+    body1.AppendHybridShape(point)
+    r2 = C.part.CreateReferenceFromObject(point)
+    point.Name = "y_pt"
+
+    #create z axis point
+    point= C.HSF.AddNewPointCoord(AS.z_pt.x,AS.z_pt.y,AS.z_pt.z)
+    body1.AppendHybridShape(point)
+    r3 = C.part.CreateReferenceFromObject(point)
+    point.Name = "z_pt"
+
+    #create x axis line
+    line = C.HSF.AddNewLinePtPt(r0, r1)
+    body1.AppendHybridShape(line)
+    r4 = C.part.CreateReferenceFromObject(line)
+    line.Name = "x_v"
+
+    #create y axis line
+    line = C.HSF.AddNewLinePtPt(r0, r2)
+    body1.AppendHybridShape(line)
+    r5 = C.part.CreateReferenceFromObject(line)
+    line.Name = "y_v"
+
+    #create z axis line
+    line = C.HSF.AddNewLinePtPt(r0, r3)
+    body1.AppendHybridShape(line)
+    r6 = C.part.CreateReferenceFromObject(line)
+    line.Name = "z_v"
+
+    #AxisSystem itself currently not created in CATIA
+
+    return(C)
+
+
+
+def display_line(line,C):
+
+    #Currently only displays lines with embeded points (rather than ID referenced)
+    #TODO to fix ^^ points would have to be run before lines then IDs are found in CATIA
+    if line.points != None:
+        #Point 1
+        point0= C.HSF.AddNewPointCoord(line.points[0].x,line.points[0].y,line.points[0].z)
+        C.b_list[2].AppendHybridShape(point0)
+        r0 = C.part.CreateReferenceFromObject(point0)
+
+        #Point 2
+        point= C.HSF.AddNewPointCoord(line.points[1].x,line.points[1].y,line.points[1].z)
+        C.b_list[2].AppendHybridShape(point)
+        r1 = C.part.CreateReferenceFromObject(point)
+
+        #Line
+        line1 = C.HSF.AddNewLinePtPt(r0, r1)
+        C.b_list[2].AppendHybridShape(line1)
+        r3 = C.part.CreateReferenceFromObject(line1)
+        if line.ID != None:
+            line1.Name="ID"+str(line.ID)
+
+
+    return()
 
 def display_AreaMesh(AM,part1,HSF,hbs):
     body3 = hbs.Add()
