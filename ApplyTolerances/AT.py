@@ -357,9 +357,9 @@ def enableCATIA(D,yp_list,filename,path):
 #currently available tolerance objects
 toll = tol_list()
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\orientation_map_example"
-filename = "sq_test_001"
-with open(path+"\\"+filename+"_layup.json","r") as in_file:
+path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70c"
+filename = "x_test_141"
+with open(path+"\\"+filename+"_layup_plus_axis.json","r") as in_file:
     json_str= in_file.read()
 
 #turn file into workable classes

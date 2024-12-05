@@ -70,7 +70,7 @@ def CAT_points(points,seg=0):
 
 #next few are display tools 
 
-def display_file(D):
+def display_file(D,disp_mesh = True):
 
     #package CATIA setup for moving it around
     C = CATIA_ctrl()
@@ -102,7 +102,8 @@ def display_file(D):
     #To be expanded with CompoST expansion
     for g in D.allGeometry:
         if type(g) == cs.AreaMesh:
-            display_AreaMesh(g,C.part,C.HSF,C.bodies)
+            if disp_mesh == True:
+                display_AreaMesh(g,C.part,C.HSF,C.bodies)
 
         if type(g) == cs.Point:
             display_point(g,C.part,C.HSF,body1)
@@ -426,13 +427,12 @@ def SurfaceGen(AM):
     #how is the surface?
     print("x")
 
-'''
+
 #open file
-with open("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-3\\x_test_141_layup.json","r") as in_file:
-    json_str= in_file.read()
+# with open("D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized bench\\WO4502.json","r") as in_file:
+#     json_str= in_file.read()
 
-#print(json_str)
-D = deserialize(json_str,string_input=True)
+# #print(json_str)
+# D = deserialize(json_str,string_input=True)
 
-#display_file(D)
-'''
+# display_file(D,disp_mesh=False)

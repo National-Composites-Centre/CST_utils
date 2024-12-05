@@ -15,7 +15,7 @@ from pydantic.config import ConfigDict
 import json
 from jsonic import serialize, deserialize
 
-#### VERSION 0.70 ####
+#### VERSION 0.70c ####
 #https://github.com/National-Composites-Centre/CompoST
 
 #documentation link in the repository Readme
@@ -124,7 +124,7 @@ class FileMetadata(BaseModel):
     lastModified: Optional[str] = Field(default=None) #Automatically refresh on save - string for json parsing
     lastModifiedBy: Optional[str] = Field(default=None) #String name
     author: Optional[str] = Field(default=None) #String Name
-    version: Optional[str] = Field(default= "0.68c") #eg. - type is stirng now, for lack of better options
+    version: Optional[str] = Field(default= "0.70c") #eg. - type is stirng now, for lack of better options
     layupDefinitionVersion: Optional[str] = Field(default=None)
 
     #external file references - separate class?
@@ -160,7 +160,6 @@ class CompositeElement(CompositeDBItem):
     tolerances: Optional[list['Tolerance']] = Field(None)
     axisSystemID: Optional[int] = Field(None) #ID reference to allAxis systems 
     referencedBy: Optional[list[int]] = Field(None) # list of int>
-    status: Optional[str] = Field(None) #TODO
 
 class Piece(CompositeElement):
     #CompositeElement type object
@@ -249,6 +248,8 @@ class Defect(CompositeDBItem):
     status: Optional[object] = Field(None) #TODO
     axisSystemID: Optional[int] = Field(None) #reference to axis system stored in Geo. elements
     file: Optional[str] = Field(None) #reference to dedicated defect file
+    splineRelimitationRef: Optional[int] = Field(None) #points collected as spline relimiting the defect
+    splineRelimitation: Optional['Spline'] = Field(None)
 
 class Wrinkle(Defect):
 
@@ -257,8 +258,6 @@ class Wrinkle(Defect):
     maxRoC: Optional[float] = Field(None)
     size_x: Optional[float] = Field(None) #primary direction size, according to referenced axisSystemID, or global axis if local not available
     size_y: Optional[float] = Field(None)
-    splineRelimitationRef: Optional[int] = Field(None) #points collected as spline relimiting the defect
-    splineRelimitation: Optional['Spline'] = Field(None)
     meshRef: Optional[int] = Field(None) # area covered by defect expressed in mesh format (area or volume)
     amplitude: Optional[float] = Field(None) #out of plane maxiumum size of the defect
 
@@ -268,8 +267,6 @@ class FibreOrientations(Defect):
     orientations: Optional[list[float]] = Field(None) #list of floats corresponding to the "lines" list 
     averageOrientation: Optional[float] = Field(None) #average of "orientations", does not account for varying lenght of lines
     avDiffToNominal: Optional[list[float]] = Field(None) #average difference 
-    splineRelimitation: Optional['Spline'] = Field(None) #area for this definition
-    splineRelimitationRef: Optional[int] = Field(None) # same as above, but referenced using 'ID'
 
 
 class Tolerance(CompositeDBItem):
@@ -314,8 +311,6 @@ class BoundaryTolerance(Defect):
     maxAllowedDev: Optional[float] = Field(None) #maximum allowed distance of a measured point from intended boundary
     maxAv: Optional[float] = Field(None) #
 
-
-
 #
 ##
 ###
@@ -333,6 +328,7 @@ class Stage(BaseModel):
     stageID: Optional[int] = Field(default=None) 
     memberName: Optional[str] = Field(default=None)
     source: Optional[SourceSystem] = Field(None) #SourceSystem
+    processRef: Optional[str] = Field(None) #this is reference to process that corresponds to current stage (e.g. instruction sheet pdf location)
 
 class PlyScan(Stage):
 
