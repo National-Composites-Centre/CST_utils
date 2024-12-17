@@ -25,6 +25,22 @@ from tkinter import OptionMenu, Frame, IntVar
 
 #spline relim, can be taken from loaded file (have design at the start of this process)
 
+
+class TolLine(BaseModel):
+
+    # Object corresponding to one tolerance object, but including local UI and temporary parameters
+
+    main_button: Optional[object] = Field(None)
+    ref_pos: Optional[int] = Field(None)
+    delete_button: Optional[object] = Field(None)
+    value_button: Optional[object] = Field(None)
+    tol_obj: Optional[object] = Field(None)
+    var_inputs: Optional[list[object]] = Field(None) #field objects
+    cat_button: Optional[object] = Field(None)
+    relim: Optional[str] = Field(None)
+    splineRelimitation: Optional[object] = Field(None)
+    splineRelimitationRef: Optional[int] = Field(None)
+
 def tol_list():
     #initiate empty list
     #class_names = [name for name, obj in globals().items() if isinstance(obj, type)]
@@ -85,18 +101,7 @@ def pts100(sp,C,hs,dir = False,no_p = 100):
     return(x)
 
 
-class TolLine(BaseModel):
 
-    main_button: Optional[object] = Field(None)
-    ref_pos: Optional[int] = Field(None)
-    delete_button: Optional[object] = Field(None)
-    value_button: Optional[object] = Field(None)
-    tol_obj: Optional[object] = Field(None)
-    var_inputs: Optional[list[object]] = Field(None) #field objects
-    cat_button: Optional[object] = Field(None)
-    relim: Optional[str] = Field(None)
-    splineRelimitation: Optional[object] = Field(None)
-    splineRelimitationRef: Optional[int] = Field(None)
 
 
 def SaveTols(D,yp_list):
@@ -268,17 +273,11 @@ def AddTolLine(D,yP_var,yp_list):
     button.place(x=20,y=button.winfo_y()+30)
     buttonS.place(x=20,y=buttonS.winfo_y()+30)
     button5.place(x=20,y=button5.winfo_y()+30)
-    #print(yp_list)
-
 
 
 def CAT_selection(rp,yp_list,C):
 
     c_sel = C.doc.Selection
-    
-    # New part where the feature should be pasted
-    #new_prod = c_prod.Products.AddNewComponent("Part", "")
-    #new_part_doc = new_prod.ReferenceProduct.Parent
     
     sel_obj = None
     for yp in yp_list:
@@ -358,9 +357,9 @@ def enableCATIA(D,yp_list,filename,path):
 #currently available tolerance objects
 toll = tol_list()
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\orientation_map_example"
-filename = "sq_test_001"
-with open(path+"\\"+filename+"_layup.json","r") as in_file:
+path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70c"
+filename = "x_test_141"
+with open(path+"\\"+filename+"_layup_plus_axis.json","r") as in_file:
     json_str= in_file.read()
 
 #turn file into workable classes

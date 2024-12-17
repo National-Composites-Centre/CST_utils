@@ -70,7 +70,7 @@ def CAT_points(points,seg=0):
 
 #next few are display tools 
 
-def display_file(D):
+def display_file(D,disp_mesh = True):
 
     #package CATIA setup for moving it around
     C = CATIA_ctrl()
@@ -94,20 +94,143 @@ def display_file(D):
     body2.Name="Splines"
     C.b_list.append(body2)
 
+    body3 = C.bodies.Add()
+    body3.Name="Splines"
+    C.b_list.append(body3)
+
+    body4 = C.bodies.Add()
+    body4.Name="LINES"
+    C.b_list.append(body4)
+
     #individual functions for specific objects to be displayed 
     #To be expanded with CompoST expansion
     for g in D.allGeometry:
         if type(g) == cs.AreaMesh:
-            display_AreaMesh(g,C.part,C.HSF,C.bodies)
+            if disp_mesh == True:
+                display_AreaMesh(g,C.part,C.HSF,C.bodies)
 
         if type(g) == cs.Point:
             display_point(g,C.part,C.HSF,body1)
 
         if type(g) == cs.Spline:
-            display_spline(g,C.part,C.HSF,body2,D)
+            #display_spline(g,C.part,C.HSF,body2,D) #spline now difficult
+            display_splineX(g,C)
+
+            #TODO calculate circumference and number of points
+            #if number of points - use the high quality spline gen (first)
+            #if low number of points - use low quality line segmentation (second)
+
+        if type(g) == cs.AxisSystem:
+            C = display_AxisSystem(g,C)
+
+        if type(g) == cs.Line:
+            display_line(g,C,body4)
+
+    for d in D.allDefects:
+        if type(d) == cs.FibreOrientations:
+            C = display_FO(d,C)
+
 
     return(C)
 
+def display_FO(d,C):
+    #defect object = d
+    bodyX = C.bodies.Add()
+    bodyX.Name="FibreOrientations"
+    if d.ID != None:
+        bodyX.Name += "_"+str(d.ID)
+    C.b_list.append(bodyX)
+
+    for line in d.lines:
+        display_line(line,C,bodyX)
+
+    return(C)
+
+def display_AxisSystem(AS,C):
+    #CATIA axis definition causes issue for scripting.
+    #Currently the below displayed as lines instead .
+    #This can be manually created into axis system if needed.
+    #TODO explore the issue with passing arguments to actual axis system object in CATIA
+
+    body1 = C.bodies.Add()
+    if AS.ID != None:
+        body1.Name="AxiSystem_"+"ID_"+str(AS.ID)
+    else:
+        body1.Name="AxiSystem_"+"_ID_NONE"
+    C.b_list.append(body1)
+
+    #Create Origin
+    point0= C.HSF.AddNewPointCoord(AS.o_pt.x,AS.o_pt.y,AS.o_pt.z)
+    body1.AppendHybridShape(point0)
+    r0 = C.part.CreateReferenceFromObject(point0)
+    point0.Name = "o_pt"
+    
+    #Create x axis point
+    point= C.HSF.AddNewPointCoord(AS.x_pt.x,AS.x_pt.y,AS.x_pt.z)
+    body1.AppendHybridShape(point)
+    r1 = C.part.CreateReferenceFromObject(point)
+    point.Name = "x_pt"
+
+    #create y axis point
+    point= C.HSF.AddNewPointCoord(AS.y_pt.x,AS.y_pt.y,AS.y_pt.z)
+    body1.AppendHybridShape(point)
+    r2 = C.part.CreateReferenceFromObject(point)
+    point.Name = "y_pt"
+
+    #create z axis point
+    point= C.HSF.AddNewPointCoord(AS.z_pt.x,AS.z_pt.y,AS.z_pt.z)
+    body1.AppendHybridShape(point)
+    r3 = C.part.CreateReferenceFromObject(point)
+    point.Name = "z_pt"
+
+    #create x axis line
+    line = C.HSF.AddNewLinePtPt(r0, r1)
+    body1.AppendHybridShape(line)
+    r4 = C.part.CreateReferenceFromObject(line)
+    line.Name = "x_v"
+
+    #create y axis line
+    line = C.HSF.AddNewLinePtPt(r0, r2)
+    body1.AppendHybridShape(line)
+    r5 = C.part.CreateReferenceFromObject(line)
+    line.Name = "y_v"
+
+    #create z axis line
+    line = C.HSF.AddNewLinePtPt(r0, r3)
+    body1.AppendHybridShape(line)
+    r6 = C.part.CreateReferenceFromObject(line)
+    line.Name = "z_v"
+
+    #AxisSystem itself currently not created in CATIA
+
+    return(C)
+
+
+
+def display_line(line,C,bodyX):
+
+    #Currently only displays lines with embeded points (rather than ID referenced)
+    #TODO to fix ^^ points would have to be run before lines then IDs are found in CATIA
+    if line.points != None:
+        #Point 1
+        point0= C.HSF.AddNewPointCoord(line.points[0].x,line.points[0].y,line.points[0].z)
+        bodyX.AppendHybridShape(point0)
+        r0 = C.part.CreateReferenceFromObject(point0)
+
+        #Point 2
+        point= C.HSF.AddNewPointCoord(line.points[1].x,line.points[1].y,line.points[1].z)
+        bodyX.AppendHybridShape(point)
+        r1 = C.part.CreateReferenceFromObject(point)
+
+        #Line
+        line1 = C.HSF.AddNewLinePtPt(r0, r1)
+        bodyX.AppendHybridShape(line1)
+        r3 = C.part.CreateReferenceFromObject(line1)
+        if line.ID != None:
+            line1.Name="ID"+str(line.ID)
+
+
+    return()
 
 def display_AreaMesh(AM,part1,HSF,hbs):
     body3 = hbs.Add()
@@ -153,7 +276,41 @@ def display_point(pt,part1,HSF,body1):
     return()
 
 
+def display_splineX(spl,C):
+    #this is alternative/simplified method of displaying spline relimitation
+    #it creates the points require - and then joins them by lines - user can modify this in CAD system better.
+    #This prevents erroneous spline generations 
+    bodyX = C.bodies.Add()
+    if spl.ID != None:
+        bodyX.Name = "Spline"+"_"+str(spl.ID)
+    C.b_list.append(bodyX)
+
+    r2 = None
+    #For points stored directly under spline
+    if spl.points != None:
+        for i,p in enumerate(spl.points):
+            point=C.HSF.AddNewPointCoord(p.x,p.y,p.z)
+            bodyX.AppendHybridShape(point)
+            r1 = C.part.CreateReferenceFromObject(point)
+
+            if i != 0:
+                lpt = C.HSF.AddNewLinePtPt(r1, r2)
+                bodyX.AppendHybridShape(lpt)
+            else:
+                r0 = r1
+            
+            r2 = r1
+        #connecting to start point
+        lpt = C.HSF.AddNewLinePtPt(r0, r2)
+        bodyX.AppendHybridShape(lpt)
+
+
+
+
+
+
 def display_spline(spl,part1,HSF,body2,D):
+    #Currently issues with some erroneous spline generations in 3D
 
     ref_list = []
     # Starting new spline f
@@ -187,6 +344,7 @@ def display_spline(spl,part1,HSF,body2,D):
                     point = HSF.AddNewPointCoord(p.x,p.y,p.z)
                     point.Name="ID"+str(p.ID)
                     spline2.AddPoint(point)
+
 
 
     #For list of points stored as ID refernces only
@@ -223,11 +381,11 @@ def display_spline(spl,part1,HSF,body2,D):
 
 
     #if breaks were employed first point has to be added
-    if spl.breaks != None:
-        p = spl.points[0]
-        point = HSF.AddNewPointCoord(p.x,p.y,p.z)
-        point.Name="ID"+str("__0__")
-        spline2.AddPoint(point)
+    #if spl.breaks != None:
+    #    p = spl.points[0]
+    #    point = HSF.AddNewPointCoord(p.x,p.y,p.z)
+    #    point.Name="ID"+str("__0__")
+    #    spline2.AddPoint(point)
 
 
 
@@ -331,13 +489,12 @@ def SurfaceGen(AM):
     #how is the surface?
     print("x")
 
-'''
+
 #open file
-with open("D:\\CAD_library_sampling\\CompoST_examples\\NO_IP_v068b-3\\x_test_141_layup.json","r") as in_file:
-    json_str= in_file.read()
+# with open("D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized bench\\WO4502.json","r") as in_file:
+#     json_str= in_file.read()
 
-#print(json_str)
-D = deserialize(json_str,string_input=True)
+# #print(json_str)
+# D = deserialize(json_str,string_input=True)
 
-#display_file(D)
-'''
+# display_file(D,disp_mesh=False)

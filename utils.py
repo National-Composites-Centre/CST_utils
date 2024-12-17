@@ -127,7 +127,7 @@ def reLink(D):
         for o in D.allDefects:
             temp, dup = findDupID(o,temp,dup)
     if D.allTolerances != None:
-        for o in D.allTolerance:
+        for o in D.allTolerances:
             temp, dup = findDupID(o,temp,dup)
 
     #now iterate to find the objects and re-write with copy
@@ -167,7 +167,7 @@ def reLink(D):
                 nestN = nestN[:-1]
                 nestS = nestS[:-1]
         if D.allTolerances != None:
-            for ii,o in enumerate(D.allTolerance):
+            for ii,o in enumerate(D.allTolerances):
                 nestS.append("allTolerance")
                 nestN.append(ii)
                 D,f,nestS,nestN,NS_c,NN_c = reLinkRec(D,o,f,i,nestS,nestN,NS_c,NN_c)
