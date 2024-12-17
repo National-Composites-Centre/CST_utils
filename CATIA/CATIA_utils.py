@@ -98,6 +98,10 @@ def display_file(D,disp_mesh = True):
     body3.Name="Splines"
     C.b_list.append(body3)
 
+    body4 = C.bodies.Add()
+    body4.Name="LINES"
+    C.b_list.append(body4)
+
     #individual functions for specific objects to be displayed 
     #To be expanded with CompoST expansion
     for g in D.allGeometry:
@@ -109,13 +113,36 @@ def display_file(D,disp_mesh = True):
             display_point(g,C.part,C.HSF,body1)
 
         if type(g) == cs.Spline:
-            display_spline(g,C.part,C.HSF,body2,D)
+            #display_spline(g,C.part,C.HSF,body2,D) #spline now difficult
+            display_splineX(g,C)
+
+            #TODO calculate circumference and number of points
+            #if number of points - use the high quality spline gen (first)
+            #if low number of points - use low quality line segmentation (second)
 
         if type(g) == cs.AxisSystem:
             C = display_AxisSystem(g,C)
 
         if type(g) == cs.Line:
-            display_line(g,C)
+            display_line(g,C,body4)
+
+    for d in D.allDefects:
+        if type(d) == cs.FibreOrientations:
+            C = display_FO(d,C)
+
+
+    return(C)
+
+def display_FO(d,C):
+    #defect object = d
+    bodyX = C.bodies.Add()
+    bodyX.Name="FibreOrientations"
+    if d.ID != None:
+        bodyX.Name += "_"+str(d.ID)
+    C.b_list.append(bodyX)
+
+    for line in d.lines:
+        display_line(line,C,bodyX)
 
     return(C)
 
@@ -180,24 +207,24 @@ def display_AxisSystem(AS,C):
 
 
 
-def display_line(line,C):
+def display_line(line,C,bodyX):
 
     #Currently only displays lines with embeded points (rather than ID referenced)
     #TODO to fix ^^ points would have to be run before lines then IDs are found in CATIA
     if line.points != None:
         #Point 1
         point0= C.HSF.AddNewPointCoord(line.points[0].x,line.points[0].y,line.points[0].z)
-        C.b_list[2].AppendHybridShape(point0)
+        bodyX.AppendHybridShape(point0)
         r0 = C.part.CreateReferenceFromObject(point0)
 
         #Point 2
         point= C.HSF.AddNewPointCoord(line.points[1].x,line.points[1].y,line.points[1].z)
-        C.b_list[2].AppendHybridShape(point)
+        bodyX.AppendHybridShape(point)
         r1 = C.part.CreateReferenceFromObject(point)
 
         #Line
         line1 = C.HSF.AddNewLinePtPt(r0, r1)
-        C.b_list[2].AppendHybridShape(line1)
+        bodyX.AppendHybridShape(line1)
         r3 = C.part.CreateReferenceFromObject(line1)
         if line.ID != None:
             line1.Name="ID"+str(line.ID)
@@ -249,7 +276,41 @@ def display_point(pt,part1,HSF,body1):
     return()
 
 
+def display_splineX(spl,C):
+    #this is alternative/simplified method of displaying spline relimitation
+    #it creates the points require - and then joins them by lines - user can modify this in CAD system better.
+    #This prevents erroneous spline generations 
+    bodyX = C.bodies.Add()
+    if spl.ID != None:
+        bodyX.Name = "Spline"+"_"+str(spl.ID)
+    C.b_list.append(bodyX)
+
+    r2 = None
+    #For points stored directly under spline
+    if spl.points != None:
+        for i,p in enumerate(spl.points):
+            point=C.HSF.AddNewPointCoord(p.x,p.y,p.z)
+            bodyX.AppendHybridShape(point)
+            r1 = C.part.CreateReferenceFromObject(point)
+
+            if i != 0:
+                lpt = C.HSF.AddNewLinePtPt(r1, r2)
+                bodyX.AppendHybridShape(lpt)
+            else:
+                r0 = r1
+            
+            r2 = r1
+        #connecting to start point
+        lpt = C.HSF.AddNewLinePtPt(r0, r2)
+        bodyX.AppendHybridShape(lpt)
+
+
+
+
+
+
 def display_spline(spl,part1,HSF,body2,D):
+    #Currently issues with some erroneous spline generations in 3D
 
     ref_list = []
     # Starting new spline f
@@ -283,6 +344,7 @@ def display_spline(spl,part1,HSF,body2,D):
                     point = HSF.AddNewPointCoord(p.x,p.y,p.z)
                     point.Name="ID"+str(p.ID)
                     spline2.AddPoint(point)
+
 
 
     #For list of points stored as ID refernces only
@@ -319,11 +381,11 @@ def display_spline(spl,part1,HSF,body2,D):
 
 
     #if breaks were employed first point has to be added
-    if spl.breaks != None:
-        p = spl.points[0]
-        point = HSF.AddNewPointCoord(p.x,p.y,p.z)
-        point.Name="ID"+str("__0__")
-        spline2.AddPoint(point)
+    #if spl.breaks != None:
+    #    p = spl.points[0]
+    #    point = HSF.AddNewPointCoord(p.x,p.y,p.z)
+    #    point.Name="ID"+str("__0__")
+    #    spline2.AddPoint(point)
 
 
 

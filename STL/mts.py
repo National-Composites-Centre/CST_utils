@@ -2,8 +2,11 @@
 
 from utils import  method_reverse_lookup
 from STL.file_utils import import_stl_v1
+from MATH_utils.vec_utils import anyNormal
 #from CATIA.CATIA_utils import bug_fixing, CAT_points
 import numpy as np
+import open3d as o3d
+
 import math
 from sympy import Plane, Point, Point3D 
 import CompositeStandard as cs
@@ -583,8 +586,6 @@ def meshToSpline(AM):
 
 def meshToSpline_o3d(MeshFile):
     # Imports
-    import open3d as o3d
-    import numpy as np
 
     #TODO 
     #mains suspected issue is duplication of nodes (node coincidence)
@@ -644,7 +645,130 @@ def meshToSpline_o3d(MeshFile):
 
     return(edge_points)
 
+from scipy.spatial import distance_matrix
+import random
+def mtSimple(MeshFile):
 
+    mesh = o3d.io.read_triangle_mesh(MeshFile)
+
+    tria = np.asarray(mesh.triangles)
+    #print(tria)
+    #sample of X elements
+    i = 0
+    sample = np.asarray([[0,0,0]])
+    while i < 20:
+        rs = random.randint(0,np.size(tria,0)-1)
+        sample = np.concatenate((sample,np.asarray([tria[rs,:]])),axis=0)
+        i += 1
+    sample = np.delete(sample,0,axis=0)
+
+    POINTS = np.asarray(mesh.vertices)
+
+    normals = np.asarray([[0,0,0]])
+    for i in range(0,np.size(sample,0)):
+
+        v1 = POINTS[sample[i,0],:]-POINTS[sample[i,1],:]
+        v2 = POINTS[sample[i,0],:]-POINTS[sample[i,2],:]
+
+        #v3 is local normal
+        v3 = np.cross(v1,v2)
+        
+        if np.size(normals,0) > 1:
+            #average distance will be close to 0 if oposite direction
+            t1 = math.sqrt(((normals[1,0]+v3[0])/2)**2+((normals[1,1]+v3[1])/2)**2+((normals[1,2]+v3[2])/2)**2)
+            t0 = math.sqrt((normals[1,0]**2)+(normals[1,1]**2)+(normals[1,2]**2))
+            #print("pre-change",NO)
+            if t1 < t0*0.5: # adjust later - reasonably 2 vectors in same direction should not avarage into this
+                v3 = v3 * -1
+        normals = np.concatenate((normals,np.asarray([v3])),axis=0)
+
+        #find normal to two vectors
+    normals = np.delete(normals,0,axis=0)
+
+    #average the normals (make sure same direction first)
+    normal = np.mean(normals,axis=0)
+
+
+    #this gives overall plane
+    #any point from mesh
+    center = POINTS[int(np.size(POINTS,0)/2),:]
+
+    dVec = anyNormal(normal) #unit vector
+
+    dVec2 = anyNormal(normal,dVec) # perpendicular to both
+
+    scale = 99999
+    #create points on large circle in this new plane
+    #not quite circle, but distance does not matter as long as significantly larger than defect
+
+    #first point
+    CP = np.asarray([center+scale*dVec])
+    
+    #TODO this circle point gen can  be simpler .... 
+    m = 4
+    i = 1
+    while i < m:
+        CP = np.concatenate((CP,np.asarray([center+scale*((m-i)*dVec+(i)*dVec2)/m])),axis=0)
+        i += i
+
+
+    CP = np.concatenate((CP,np.asarray([center+scale*dVec2])),axis=0)
+
+    m = 4
+    i = 1
+    while i < m:
+        CP = np.concatenate((CP,np.asarray([center+scale*((m-i)*dVec2-(i)*dVec)/m])),axis=0)
+        i += i
+                                         
+    CP = np.concatenate((CP,np.asarray([center-scale*dVec])),axis=0)
+
+    m = 4
+    i = 1
+    while i < m:
+        CP = np.concatenate((CP,np.asarray([center+scale*(-(m-i)*dVec-(i)*dVec2)/m])),axis=0)
+        i += i
+
+    CP = np.concatenate((CP,np.asarray([center-scale*dVec2])),axis=0)
+
+    m = 4
+    i = 1
+    while i < m:
+        CP = np.concatenate((CP,np.asarray([center+scale*(-(m-i)*dVec2+(i)*dVec)/m])),axis=0)
+        i += i
+
+
+    #find the closest point to each of circle points, these are the edge points
+
+    edge_points = []
+    for i in range(0,np.size(CP,0)):
+        B = np.asarray([CP[i,:]])
+        C = distance_matrix(POINTS,B)
+        min_index = np.argmin(C)
+        edge_points.append(cs.Point(x=POINTS[min_index,0],y=POINTS[min_index,1],z=POINTS[min_index,2]))
+
+    #prevent point duplication
+    dist = 99999
+    #this makes sure process is repated if anything was deleted
+    e = True
+    while e == True:
+        e = False
+        for i, ep in enumerate(edge_points):
+            if i != 0:
+                dist = np.sqrt((ep.x-edge_points[i-1].x)**2+(ep.y-edge_points[i-1].y)**2+(ep.z-edge_points[i-1].z)**2)
+            if dist < 0.01: #0.2mm threshold for now
+                edge_points.pop(i)
+                e = True
+    brk = []
+    curDif = 0
+    for i, ep in enumerate(edge_points):
+        if i != 0:
+            prevDif = curDif
+            curDif = np.sqrt((ep.x-prev.x)**2+(ep.y-prev.y)**2+(ep.z-prev.z)**2)
+        if i > 1:
+            if (curDif/prevDif > 10) or (prevDif/curDif > 10):
+                brk.append(i)
+        prev = ep
+    return(edge_points,brk)
 #AreaMesh = import_stl_v1("source_files\\WO4502_MD_14_only.stl")
 #meshToSpline(AreaMesh)
 

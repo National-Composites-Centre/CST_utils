@@ -3,7 +3,7 @@ from jsonic import serialize, deserialize
 
 #from CATIA.CATIA_utils import CAT_points
 from STL.file_utils import import_stl_v1, clean_json
-from STL.mts import MTS, meshToSpline, MTS_np, meshToSpline_np, meshToSpline_o3d
+from STL.mts import MTS, meshToSpline, MTS_np, meshToSpline_np, meshToSpline_o3d, mtSimple
 import CompositeStandard as cs
 import h5py
 
@@ -102,6 +102,8 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
                         print("no mesh file found for defect no:", pID)
                         AM = []
 
+                    #breaks initiated here as not all options below provide breaks
+                    brk = []
                     #if file was found
                     if AM != []:
                         if splStore == True:
@@ -112,7 +114,7 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 
                             #This option uses the flat circle calculations - works better for complicated meshes
                             #EP = meshToSpline(AM)
-                            EP = meshToSpline_np(AM)
+                            #EP = meshToSpline_np(AM) #---this
                             #This option uses number of element-node associations - works better for consistent and simple meshes
                             #np versions highly experimental
                             #EP = MTS_np(AM)
@@ -121,8 +123,11 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
                             #This does not require previous mesh conversion - therefore the code here could be simplified if this becomes the default
                             #EP = meshToSpline_o3d(fl)
 
+                            #very simplified edge
+                            EP,brk = mtSimple(fl)
+
                             #store the relimitation spline and reference it in defect
-                            D.allGeometry.append(cs.Spline(points = EP,ID = D.fileMetadata.maxID + 1))
+                            D.allGeometry.append(cs.Spline(points = EP,ID = D.fileMetadata.maxID + 1,breaks=brk))
                             wrinkle.splineRelimitationRef = D.fileMetadata.maxID + 1
                             D.fileMetadata.maxID += 1
 
@@ -173,11 +178,11 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 import time
 t1 = time.perf_counter()
 
-#path = "D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized_v067_no_spline\\"
+#path = "D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized_bench_v70d\\"
 #filename = "WO4502"
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70c_V1.0"
+path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70d_V1.3"
 filename = "x_test_141_tols"
-store_wrinkle(path,filename,splStore = True,meshStore = True)
+store_wrinkle(path,filename,splStore = True,meshStore = False)
 
 
 t2 = time.perf_counter()

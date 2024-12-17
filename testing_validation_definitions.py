@@ -39,6 +39,8 @@ def AddSomeAxis():
 #AddSomeAxis()
 
 def PredefineStages(path):
+    #currently only add hock function
+    #TODO create a definition of standard Stages (as an example)
 
     filename = "x_test_141"
     with open(path+"\\"+filename+"_tols.json","r") as in_file:
@@ -73,4 +75,4 @@ def PredefineStages(path):
 
 
 
-PredefineStages("D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70c")
+#PredefineStages("D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70c")
