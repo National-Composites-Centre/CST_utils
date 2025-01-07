@@ -104,34 +104,74 @@ def display_file(D,disp_mesh = True):
 
     #individual functions for specific objects to be displayed 
     #To be expanded with CompoST expansion
-    for g in D.allGeometry:
-        if type(g) == cs.AreaMesh:
-            if disp_mesh == True:
-                display_AreaMesh(g,C.part,C.HSF,C.bodies)
+    if D.allGeometry != None:
+        for g in D.allGeometry:
+            if type(g) == cs.AreaMesh:
+                if disp_mesh == True:
+                    display_AreaMesh(g,C.part,C.HSF,C.bodies)
 
-        if type(g) == cs.Point:
-            display_point(g,C.part,C.HSF,body1)
+            if type(g) == cs.Point:
+                display_point(g,C.part,C.HSF,body1)
 
-        if type(g) == cs.Spline:
-            #display_spline(g,C.part,C.HSF,body2,D) #spline now difficult
-            display_splineX(g,C)
+            if type(g) == cs.Spline:
+                #Two methods for splines.
+                #check if distances between consecutive points are largely varied - if so, simplify the spline generation many lines instead.
+                #CATIA can create very wonky shapes...
 
-            #TODO calculate circumference and number of points
-            #if number of points - use the high quality spline gen (first)
-            #if low number of points - use low quality line segmentation (second)
+                #currently number of points and circumference guiding factors for selecting mehtod
+                #(if issues persist consider method dealing with the statistical variation between point-point distances)
 
-        if type(g) == cs.AxisSystem:
-            C = display_AxisSystem(g,C)
+                #calculate circumference if not available
+                if g.length == None:
+                    dist = 0
+                    for i in range(1,len(g.points)-1):
+                        dist += ((g.points[i].x-g.points[i-1].x)**2+(g.points[i].y-g.points[i-1].y)**2+(g.points[i].y-g.points[i-1].y)**2)**(0.5)
+                    g.lenght = dist
+                    #this is not saved for now, as CATIA display does not save new version of JSON
 
-        if type(g) == cs.Line:
-            display_line(g,C,body4)
+                if (g.length/len(g.points)) > 5: #5mm threshold for now
+                    #simplified method
+                    display_splineX(g,C)
+                else:
+                    display_spline(g,C.part,C.HSF,body2,D) #spline now difficult
+                
 
-    for d in D.allDefects:
-        if type(d) == cs.FibreOrientations:
-            C = display_FO(d,C)
+                #TODO calculate circumference and number of points
+                #if number of points - use the high quality spline gen (first)
+                #if low number of points - use low quality line segmentation (second)
 
+            if type(g) == cs.AxisSystem:
+                C = display_AxisSystem(g,C)
+
+            if type(g) == cs.Line:
+                display_line(g,C,body4)
+
+    if D.allDefects != None:
+        #Specific defect selection
+        for d in D.allDefects:
+            if type(d) == cs.FibreOrientations:
+                C = display_FO(d,C)
+
+            if type(d) == cs.BoundaryDeviation:
+                C = display_BD(d,C)
 
     return(C)
+def display_BD(d,C):
+
+    #create new body to house points of measured edge
+    bodyX = C.bodies.Add()
+    bodyX.Name ="BoundaryDeviations"
+    if d.ID != None:
+        bodyX.Name += "_"+str(d.ID)
+    C.b_list.append(bodyX)
+
+    #create each point listed in relimitation
+    for point in d.splineRelimitation.points:
+        p0= C.HSF.AddNewPointCoord(point.x,point.y,point.z)
+        bodyX.AppendHybridShape(p0)
+
+    return(C)
+
 
 def display_FO(d,C):
     #defect object = d
@@ -282,8 +322,23 @@ def display_splineX(spl,C):
     #This prevents erroneous spline generations 
     bodyX = C.bodies.Add()
     if spl.ID != None:
+        bodyX.Name = "SegmentsForSpline"+"_"+str(spl.ID)
+    C.b_list.append(bodyX)
+
+    body2 = C.bodies.Add()
+    if spl.ID != None:
         bodyX.Name = "Spline"+"_"+str(spl.ID)
     C.b_list.append(bodyX)
+
+    selection1 = C.doc.Selection
+    selection1.Clear() # added recently delete if error
+    visPropertySet1 = selection1.VisProperties
+    selection1.Add(bodyX)
+    visPropertySet1 = visPropertySet1.Parent
+    visPropertySet1.SetShow(1)
+    selection1.Clear()
+
+    linesList = []
 
     r2 = None
     #For points stored directly under spline
@@ -296,18 +351,32 @@ def display_splineX(spl,C):
             if i != 0:
                 lpt = C.HSF.AddNewLinePtPt(r1, r2)
                 bodyX.AppendHybridShape(lpt)
+                linesList.append(lpt)
             else:
                 r0 = r1
-            
+
             r2 = r1
         #connecting to start point
         lpt = C.HSF.AddNewLinePtPt(r0, r2)
         bodyX.AppendHybridShape(lpt)
 
+        asm = C.HSF.AddNewJoin(linesList[0], linesList[1])
+    
+        #depending on number of breaks add other pieces
+        for i in range(2,len(linesList)-1):
+            asm.AddElement(linesList[i])
 
-
-
-
+        asm.SetConnex(1)
+        asm.SetManifold(1)
+        asm.SetSimplify(0)
+        asm.SetSuppressMode(0)
+        asm.SetDeviation(0.001000)
+        asm.SetAngularToleranceMode(0)
+        asm.SetAngularTolerance(0.500000)
+        asm.SetFederationPropagation(0)
+        body2.AppendHybridShape(asm)
+        #rename
+        
 
 def display_spline(spl,part1,HSF,body2,D):
     #Currently issues with some erroneous spline generations in 3D
@@ -345,8 +414,6 @@ def display_spline(spl,part1,HSF,body2,D):
                     point.Name="ID"+str(p.ID)
                     spline2.AddPoint(point)
 
-
-
     #For list of points stored as ID refernces only
     elif spl.pointRefs != None:
         for i,p in enumerate(spl.pointRefs):
@@ -379,7 +446,6 @@ def display_spline(spl,part1,HSF,body2,D):
                     point.Name="ID"+str(pt.ID)
                     spline2.AddPoint(point)
 
-
     #if breaks were employed first point has to be added
     #if spl.breaks != None:
     #    p = spl.points[0]
@@ -387,15 +453,13 @@ def display_spline(spl,part1,HSF,body2,D):
     #    point.Name="ID"+str("__0__")
     #    spline2.AddPoint(point)
 
-
-
     #Submit the spline and create reference.
     body2.AppendHybridShape(spline2) 
     spline2.Name="ID"+str(spl.ID)
     rs2 = part1.CreateReferenceFromObject(spline2) 
     ref_list.append(rs2)
 
-    #merge splienes
+    #merge splines
     if len(ref_list) > 1:
         
         #initiate assembly
@@ -418,7 +482,6 @@ def display_spline(spl,part1,HSF,body2,D):
         #rename
         asm.Name="ID"+str(spl.ID)+"_asm"
         
-
     return()
 
 def SurfaceGen(AM):
@@ -467,8 +530,6 @@ def SurfaceGen(AM):
 
         #save intersect to list
 
-    
-
     #for each intersect in the loft 
     #    no_p = 30
     
@@ -481,12 +542,12 @@ def SurfaceGen(AM):
 
         #finalize spline, add to spl list
         
-
     #initiate loft
 
         #for each intersect in the spl list, add to loft
 
     #how is the surface?
+
     print("x")
 
 

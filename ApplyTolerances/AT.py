@@ -357,8 +357,8 @@ def enableCATIA(D,yp_list,filename,path):
 #currently available tolerance objects
 toll = tol_list()
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70c"
-filename = "x_test_141"
+path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
+filename = "x_test_142"
 with open(path+"\\"+filename+"_layup_plus_axis.json","r") as in_file:
     json_str= in_file.read()
 
@@ -372,7 +372,7 @@ print(D.fileMetadata.maxID)
 
 # create app
 root = tk.Tk()
-root.title("Tolerance definitions")
+root.title("Tolerance definitions for part:  "+filename)
 root.geometry("710x610+150+150")
 
 yP_var = IntVar(value=0)

@@ -714,7 +714,6 @@ def mtSimple(MeshFile):
 
     CP = np.concatenate((CP,np.asarray([center+scale*dVec2])),axis=0)
 
-    m = 4
     i = 1
     while i < m:
         CP = np.concatenate((CP,np.asarray([center+scale*((m-i)*dVec2-(i)*dVec)/m])),axis=0)
@@ -722,7 +721,6 @@ def mtSimple(MeshFile):
                                          
     CP = np.concatenate((CP,np.asarray([center-scale*dVec])),axis=0)
 
-    m = 4
     i = 1
     while i < m:
         CP = np.concatenate((CP,np.asarray([center+scale*(-(m-i)*dVec-(i)*dVec2)/m])),axis=0)
@@ -730,7 +728,6 @@ def mtSimple(MeshFile):
 
     CP = np.concatenate((CP,np.asarray([center-scale*dVec2])),axis=0)
 
-    m = 4
     i = 1
     while i < m:
         CP = np.concatenate((CP,np.asarray([center+scale*(-(m-i)*dVec2+(i)*dVec)/m])),axis=0)
