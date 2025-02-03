@@ -356,6 +356,7 @@ def enableCATIA(D,yp_list,filename,path):
 
 #currently available tolerance objects
 toll = tol_list()
+#print(toll)
 
 path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
 filename = "x_test_142"

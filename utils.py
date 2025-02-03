@@ -13,7 +13,6 @@ def method_reverse_lookup(a, b, c=None):
     return i
 
 
-
 #BELOW FROM MAIN COMPOST REPO - ONLY COPY HERE - EDITING TO BE DONE THERE
 
 import numpy as np
@@ -23,6 +22,7 @@ import copy
 def findDupID(loc_obj,temp,dup):
     #acceptable list names
     list_names = ["subComponents","defects","nodes","points","meshElements"]
+    para_names = ["material"]
 
     #recursively looks through object
 
@@ -34,8 +34,8 @@ def findDupID(loc_obj,temp,dup):
             #if ID already in dup add counter
             if loc_obj.ID in dup[:,0]:
                 for i in range(0,np.size(dup,0)):
-                    if loc_obj.ID == dup[i,0]:
-                        dup[i,1] == dup[i,1] + 1
+                    if float(loc_obj.ID) == float(dup[i,0]):
+                        dup[i,1] = dup[i,1] + 1
             #if ID not in dup, add new row
             else:
                 dup = np.concatenate((dup,np.asarray([[loc_obj.ID,2]])),axis = 0)
@@ -43,13 +43,18 @@ def findDupID(loc_obj,temp,dup):
         else:
             temp.append(loc_obj.ID)
 
-            #specific lists accepted only for housing more nested objects
-            for any_atr in dir(loc_obj):
-                if any_atr in list_names:
-                    new_obj = getattr(loc_obj,any_atr)
-                    if new_obj != None:
-                        for o in new_obj:
-                            temp, dup = findDupID(o,temp,dup)
+        #specific lists accepted only for housing more nested objects
+        for any_atr in dir(loc_obj):
+            if any_atr in list_names:
+                new_obj = getattr(loc_obj,any_atr)
+                if new_obj != None:
+                    for o in new_obj:
+                        temp, dup = findDupID(o,temp,dup)
+            #Option for material etc, class stored not in list but as full object reference
+            elif any_atr in para_names:
+                new_obj = getattr(loc_obj,any_atr)
+                if new_obj != None:
+                    temp, dup = findDupID(new_obj,temp,dup)
     #if ID is not specified
     else: 
         
@@ -59,12 +64,18 @@ def findDupID(loc_obj,temp,dup):
                 if new_obj != None:
                     for o in new_obj:
                         temp, dup = findDupID(o,temp,dup)
+            #Option for material etc, class stored not in list but as full object reference
+            elif any_atr in para_names:
+                new_obj = getattr(loc_obj,any_atr)
+                if new_obj != None:
+                    temp, dup = findDupID(new_obj,temp,dup)
             
     return(temp,dup)
 
 def reLinkRec(D,o,f,i,nestS,nestN,NS_c,NN_c):
     #acceptable list names
     list_names = ["subComponents","defects","nodes","points","meshElements"]
+    para_names = ["material"]
 
     #f is the number of copies that still need to be identified
     if f > 0:
@@ -72,6 +83,7 @@ def reLinkRec(D,o,f,i,nestS,nestN,NS_c,NN_c):
         if i == o.ID:
             #if this is the first instance of ID - make a note of object to copy
             if NS_c == []:
+
                 NS_c = copy.deepcopy(nestS)
                 NN_c = copy.deepcopy(nestN)
                 f = f - 1
@@ -81,16 +93,26 @@ def reLinkRec(D,o,f,i,nestS,nestN,NS_c,NN_c):
 
                 buildF = "D"
                 for ii, st in enumerate(nestS):
-                    buildF += "."+st +"["+str(nestN[ii])+"]"
+
+                    if st in para_names:
+                        
+                        buildF += "."+st
+                    else:
+                        buildF += "."+st +"["+str(nestN[ii])+"]"
 
                 buildF += " = D"
                 for ii, st in enumerate(NS_c):
-                    buildF += "."+st +"["+str(NN_c[ii])+"]"           
+
+                    if st in para_names:
+                        
+                        buildF += "."+st  
+                    else:
+                        buildF += "."+st +"["+str(NN_c[ii])+"]" 
 
                 #not the cleanest, but wasn't able to make this work with getattr
                 #(feel free to rework)
-                print(buildF)     
-                exec(buildF)
+                #print(buildF)     
+                #exec(buildF)
                 f = f - 1
                                 
         #move to other lists
@@ -107,6 +129,15 @@ def reLinkRec(D,o,f,i,nestS,nestN,NS_c,NN_c):
                             D,f,nestS,nestN,NS_c,NN_c = reLinkRec(D,oo,f,i,nestS,nestN,NS_c,NN_c)
                             nestN = nestN[:-1]
                             nestS = nestS[:-1]
+                elif any_atr in para_names:
+                    new_obj = getattr(o,any_atr)
+                    if new_obj != None:
+                        nestS.append(any_atr)
+                        nestN.append(new_obj)
+                        D,f,nestS,nestN,NS_c,NN_c = reLinkRec(D,new_obj,f,i,nestS,nestN,NS_c,NN_c)
+                        nestN = nestN[:-1]
+                        nestS = nestS[:-1]
+
 
     return(D,f,nestS,nestN,NS_c,NN_c)
 
@@ -129,7 +160,11 @@ def reLink(D):
     if D.allTolerances != None:
         for o in D.allTolerances:
             temp, dup = findDupID(o,temp,dup)
+    if D.allMaterials != None:
+        for o in D.allMaterials:
+            temp, dup = findDupID(o,temp,dup)
 
+    dup = np.delete(dup,0,axis=0)
     #now iterate to find the objects and re-write with copy
 
     #nested strings
@@ -141,6 +176,8 @@ def reLink(D):
     #object number nest for copy
     NN_c = []
     
+    #TODO create a list of below insted, and iterate through all 
+
     for count, i in enumerate(dup[:,0]):
         f = dup[count,1]
         #Go through all known groups of objects that could be shared and contain IDs
@@ -173,5 +210,14 @@ def reLink(D):
                 D,f,nestS,nestN,NS_c,NN_c = reLinkRec(D,o,f,i,nestS,nestN,NS_c,NN_c)
                 nestN = nestN[:-1]
                 nestS = nestS[:-1]
+        if D.allMaterials != None:
+            for ii,o in enumerate(D.allMaterials):
+                nestS.append("allMaterials")
+                nestN.append(ii)
+                D,f,nestS,nestN,NS_c,NN_c = reLinkRec(D,o,f,i,nestS,nestN,NS_c,NN_c)
+                nestN = nestN[:-1]
+                nestS = nestS[:-1]
 
     return(D)
+
+

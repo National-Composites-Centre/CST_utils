@@ -66,7 +66,15 @@ def CAT_points(points,seg=0):
         point=HSF.AddNewPointCoord(p.x,p.y,p.z)
         body1.AppendHybridShape(point)
 
+def load_step(D):
 
+    C = CATIA_ctrl
+    #Initiate CATIA interaction
+    C.CAT = win32com.client.dynamic.DumbDispatch('CATIA.Application')
+    documents1 = C.CAT.Documents
+    C.doc = documents1.Open(D.fileMetadata.cadFilePath)
+
+    return(C)
 
 #next few are display tools 
 
@@ -126,7 +134,7 @@ def display_file(D,disp_mesh = True):
                     dist = 0
                     for i in range(1,len(g.points)-1):
                         dist += ((g.points[i].x-g.points[i-1].x)**2+(g.points[i].y-g.points[i-1].y)**2+(g.points[i].y-g.points[i-1].y)**2)**(0.5)
-                    g.lenght = dist
+                    g.length = dist
                     #this is not saved for now, as CATIA display does not save new version of JSON
 
                 if (g.length/len(g.points)) > 5: #5mm threshold for now

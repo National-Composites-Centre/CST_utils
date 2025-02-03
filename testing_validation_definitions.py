@@ -4,6 +4,7 @@ from jsonic import serialize, deserialize
 from utils import reLink
 from STL.file_utils import clean_json
 
+
 def AddSomeAxis(path,filename):
 
     with open(path+"\\"+filename+"_layup.json","r") as in_file:
@@ -70,10 +71,31 @@ def PredefineStages(path,filename):
         out_file.write(json_str)
 
 
+#NOT WORKING RIGHT NOW
+
+def TestIDMat():
+    path = "Tests\\ForTests\\x_test_142_layup.json"
+    with open(path,"r") as in_file:
+        json_str= in_file.read()
+
+    #turn file into workable classes
+    D = deserialize(json_str,string_input=True)
+
+    #re-link - if relevant
+    D = reLink(D)
+
+    D.allMaterials[0].E1 = 200000
+
+    testedID = D.allComposite[0].subComponents[0].material.E1
+
+    return(testedID)
 
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
-filename = "x_test_142"
+# path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
+# filename = "x_test_142"
 
-#AddSomeAxis(path,filename)
-PredefineStages(path,filename)
+# #AddSomeAxis(path,filename)
+# PredefineStages(path,filename)
+
+x = TestIDMat()
+print(x)

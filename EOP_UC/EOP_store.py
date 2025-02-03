@@ -229,6 +229,8 @@ def load_EOP(path,filename,example_file):
             if D.allDefects == None:
                 D.allDefects = []
             lastID = D.fileMetadata.maxID
+            EOP_D.allGeometry[0].ID = lastID+1
+            lastID = lastID + 1
             returnedObject.defects.append(cs.BoundaryDeviation(splineRelimitation=EOP_D.allGeometry[0], ID=lastID+1))
             D.allDefects.append(returnedObject.defects[len(returnedObject.defects)-1])
             D.fileMetadata.maxID += 1
@@ -313,9 +315,11 @@ def process_EOP(file):
                 spline2 = de.splineRelimitation
                 spline1 = localSpline
 
+            print(spline1.ID)
+            print(spline2.ID)
             distances = []
             for pt in spline1.points:
-
+                print(pt)
                 #to be obtained min distances and pts
                 minD1 = 99999
                 minD2 = 999999
@@ -373,7 +377,7 @@ def process_EOP(file):
 
 path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
 filename = "x_test_142_tols_wrinkle_withFO"
-example_file = "example_ply_edge220"
+example_file = "Test_Output_PA"
 load_EOP(path,filename,example_file)
 
 process_EOP("D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1\\x_test_142_tols_wrinkle_withFO_X.json")

@@ -15,7 +15,7 @@ from pydantic.config import ConfigDict
 import json
 from jsonic import serialize, deserialize
 
-#### VERSION 0.71a ####
+#### VERSION 0.7.3 ####
 #https://github.com/National-Composites-Centre/CompoST
 
 #documentation link in the repository Readme
@@ -124,7 +124,7 @@ class FileMetadata(BaseModel):
     lastModified: Optional[str] = Field(default=None) #Automatically refresh on save - string for json parsing
     lastModifiedBy: Optional[str] = Field(default=None) #String name
     author: Optional[str] = Field(default=None) #String Name
-    version: Optional[str] = Field(default= "0.71a") #eg. - type is stirng now, for lack of better options
+    version: Optional[str] = Field(default= "0.7.3") #eg. - type is stirng now, for lack of better options
     layupDefinitionVersion: Optional[str] = Field(default=None)
 
     #external file references - separate class?
@@ -166,11 +166,11 @@ class Piece(CompositeElement):
     #In practical terms this is section of ply layed-up in one (particulartly relevant for AFP or similar)
     splineRelimitation: Optional['Spline'] = Field(None) #points collected as spline for relimitation
     splineRelimitationRef: Optional[int] = Field(None) #same as above but stored as reference to ID
-    material: Optional[str] = Field(None) #ref to material in allMaterials
+    material: Optional['Material'] = Field(None) #material from allMaterials
 
 class Ply(CompositeElement):
     #CompositeElement type object
-    material: Optional[str] = Field(None) #ref to material in allMaterials
+    material: Optional['Material'] = Field(None) #material from allMaterials
     orientation: Optional[float] = Field(None)
     splineRelimitation: Optional['Spline'] = Field(None) #points collected as spline for relimitation
     splineRelimitationRef: Optional[int] = Field(None) #same as above but stored as reference to ID
@@ -179,14 +179,16 @@ class Sequence(CompositeElement):
     #CompositeElement type object
     orientations: Optional[list[float]] = Field(None) #used for minimalistic definition where ply-objects are avoided
     materials: Optional[list['Material']] = Field(None) #listof materials - must be same lenght as orientations
-    material: Optional[str] = Field(None) #ref to material in allMaterials
+    material: Optional['Material'] = Field(None) #material from allMaterials
     splineRelimitation: Optional['Spline'] = Field(None) #points collected as spline for relimitation
     splineRelimitationRef: Optional[int] = Field(None) #same as above but stored as reference to ID
+    EP: Optional['EffectiveProperties'] = Field(None) #Effective properties : if the component has uniform effective properties
 
 class CompositeComponent(CompositeElement):
     #this object is mostly going to be used for bonding co-curing etc where multiple distinct composite components
     #can be defined
     integratedComponent: Optional[list[CompositeDB]] = Field(None) #allows for nesting another comonent within this file
+    EP: Optional['EffectiveProperties'] = Field(None) #Effective properties : if the component has uniform effective properties
 
 class SourceSystem(BaseModel):
     softwareName: Optional[str] = Field(None)
@@ -207,9 +209,8 @@ class EngEdgeOfPart(CompositeElement):
     source: Optional['SourceSystem'] = Field(None) #defines which CAD system was this created in
     referenceGeometry: Optional[str] = Field(None) #reference to the name (string) of geometry that defines this in source CAD system
 
-class Material(BaseModel):
+class Material(CompositeDBItem):
     #this will be extended over time - it should allow for storing different level materials (i.e. stack vs ply)
-    materialName: Optional[str] = Field(None)
     E1: Optional[float] = Field(None)
     E2: Optional[float] = Field(None)
     G12: Optional[float] = Field(None)
@@ -255,7 +256,7 @@ class Spline(GeometricElement):
 class Defect(CompositeDBItem):
     
     location: Optional[list[float]] = Field(None) #x,y,z location
-    effMaterial: Optional[Material] = Field(None) #adjusted material class saved in materials
+    effMaterial: Optional['EffectiveProperties'] = Field(None) #adjusted material class saved in materials
     status: Optional[bool] = Field(None) # None = not evaluated, True = defect outside of tolerance, False = deviation but fits within tolerance
     axisSystemID: Optional[int] = Field(None) #reference to axis system stored in Geo. elements
     file: Optional[str] = Field(None) #reference to dedicated defect file
@@ -289,12 +290,11 @@ class Tolerance(CompositeDBItem):
 
 class WrinkleTolerance(Tolerance):
 
-    maxZ: Optional[float] = Field(None)
     maxY: Optional[float] = Field(None)
     maxX: Optional[float] = Field(None)
     axisSystemID: Optional[int] = Field(None)
     maxArea: Optional[float] = Field(None)
-    maxSlope: Optional[float] = Field(None)
+    maxRoC: Optional[float] = Field(None) #maximum rate of change, in radians
     maxSkew: Optional[float] = Field(None) #TODO define
     maxAmplitude: Optional[float] = Field(None)
 
@@ -322,6 +322,31 @@ class BoundaryTolerance(Tolerance):
     maxAllowedDev: Optional[float] = Field(None) #maximum allowed distance of a measured point from intended boundary
     maxAv: Optional[float] = Field(None) #
 
+class EffectiveProperties(BaseModel):
+    #this object is used for objects that need homogenized material properties
+
+    #TODO this will require additions
+    #TODO - might need splitting between mechanical and dry-fibre flow properties 
+
+    E1: Optional[float] = Field(None) 
+    E2: Optional[float] = Field(None)
+    G23: Optional[float] = Field(None)
+    G12: Optional[float] = Field(None)
+    v12: Optional[float] = Field(None)
+    sourceSystem: Optional['SourceSystem'] = Field(None)
+    thickness: Optional[float] = Field(None)
+    density: Optional[float] = Field(None)
+    K1: Optional[float] = Field(None) #principle direction permeability
+    K2: Optional[float] = Field(None) #transverse permeability
+    K3: Optional[float] = Field(None) # through thickness permeability
+    Vf: Optional[float] = Field(None) #fibre volume fraction
+
+class UnclassifiedDefect(Defect):
+    #this object is to be used when the defect you are storing does not have dedicated definition
+    #use the title field to classify it
+
+    title: Optional[str] = Field(None)
+
 #
 ##
 ###
@@ -333,6 +358,7 @@ class BoundaryTolerance(Tolerance):
 ###
 ##
 #
+
 
 class Stage(BaseModel):
 
