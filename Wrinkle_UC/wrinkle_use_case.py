@@ -180,8 +180,8 @@ t1 = time.perf_counter()
 
 #path = "D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized_bench_v70d\\"
 #filename = "WO4502"
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70d_V1.3"
-filename = "x_test_141_tols"
+path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
+filename = "x_test_142_tols"
 store_wrinkle(path,filename,splStore = True,meshStore = False)
 
 

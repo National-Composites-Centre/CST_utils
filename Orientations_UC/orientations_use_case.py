@@ -122,8 +122,8 @@ def store_FO(path,filename,ply_ID,zone=None):
         out_file.write(json_str)
 
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v70d_V1.2"
-filename = "x_test_141_tols_wrinkle"
+path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
+filename = "x_test_142_tols_wrinkle"
 store_FO(path,filename,ply_ID=int(14))
 
 

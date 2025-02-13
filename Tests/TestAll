@@ -1,0 +1,33 @@
+import unittest
+
+from utils import reLink
+from STL.file_utils import clean_json
+from jsonic import serialize, deserialize
+
+#NOT WORKING RIGHT NOW
+
+def TestIDMat():
+    path = "ForTests\\x_test_142_layup.json"
+    with open(path,"r") as in_file:
+        json_str= in_file.read()
+
+    #turn file into workable classes
+    D = deserialize(json_str,string_input=True)
+
+    #re-link - if relevant
+    D = reLink(D)
+
+    D.allMaterials[0].E1 = 200000
+
+    testedID = D.allComposite[0].subComponents[0].material.E1
+
+    return(testedID)
+
+class TestAll(unittest.TestCase):
+
+     def test_mat_link(self):
+         self.assertEqual(TestIDMat(),200000)
+
+if __name__ == "__main__":
+    unittest.main()
+
