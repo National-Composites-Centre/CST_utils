@@ -1,4 +1,4 @@
-#import unittest
+import unittest
 
 from utils import reLink
 from STL.file_utils import clean_json
@@ -23,13 +23,11 @@ def TestIDMat():
 
     return(testedID)
 
-# class TestAll(unittest.TestCase):
+class TestAll(unittest.TestCase):
 
-#     def test_mat_link(self):
-#         self.assertEqual(TestIDMat(),200000)
+     def test_mat_link(self):
+         self.assertEqual(TestIDMat(),200000)
 
 if __name__ == "__main__":
-    x = TestIDMat()
-    print(x)
-#     unittest.main()
+    unittest.main()
 
