@@ -1,14 +1,15 @@
 from jsonic import serialize, deserialize
 
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
+from CompoST import Utilities
 
 import numpy as np
 import math
 import os
 
-from utils import reLink
+#from utils import reLink
 
-from STL.file_utils import clean_json
+#from STL.file_utils import clean_json
 from CATIA.CATIA_utils import CATIA_ctrl
 import win32com.client.dynamic
 
@@ -25,7 +26,7 @@ def store_FO(path,filename,ply_ID,zone=None):
     D = deserialize(json_str,string_input=True)
 
     #re-link - if relevant
-    D = reLink(D) #TODO UNTESTED - CHECK IT WORKS
+    D = Utilities.reLink(D) 
 
     #Create FibreOrientations object
     fo = cs.FibreOrientations(lines=[],orientations=[])
@@ -113,7 +114,7 @@ def store_FO(path,filename,ply_ID,zone=None):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #save the JSON
     #save as file

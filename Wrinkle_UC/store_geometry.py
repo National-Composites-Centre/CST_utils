@@ -4,10 +4,11 @@ from jsonic import serialize, deserialize
 from CATIA.CATIA_utils import CAT_points
 from STL.file_utils import import_stl_v1, clean_json
 from STL.mts import MTS, meshToSpline
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
+from CompoST import Utilities
 
 import numpy as np
-from utils import reLink
+#from utils import reLink
 
 
 

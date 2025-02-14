@@ -1,11 +1,12 @@
 from CATIA.CATIA_utils import CATIA_ctrl, display_file, load_step
 from jsonic import serialize, deserialize
-from utils import reLink, clean_json
+#from utils import reLink, clean_json
 import win32com.client.dynamic
 from CATIA.vecEX3 import wrmmm
 import numpy as np
 
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
+from CompoST import Utilities
 
 def projectMesh(D,xNO = 300, yNO =240,meshPlane=True):
     #Assume for now projection always happens in z direction
@@ -161,7 +162,7 @@ def projectMesh(D,xNO = 300, yNO =240,meshPlane=True):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #save the JSON
     #save as file
@@ -185,6 +186,6 @@ with open(path+"\\"+filename+"_layup.json","r") as in_file:
 D = deserialize(json_str,string_input=True)
 
 #re-link - if relevant
-D = reLink(D)
+D = Utilities.reLink(D)
 
 projectMesh(D)

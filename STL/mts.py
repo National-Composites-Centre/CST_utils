@@ -9,7 +9,7 @@ import open3d as o3d
 
 import math
 from sympy import Plane, Point, Point3D 
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
 
 
 #from numpy import sqrt, dot, cross                       

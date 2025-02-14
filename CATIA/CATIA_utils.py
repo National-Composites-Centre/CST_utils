@@ -1,6 +1,6 @@
 import win32com.client.dynamic
 from jsonic import serialize, deserialize
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
 from pydantic import BaseModel, Field
 from typing import Optional
 

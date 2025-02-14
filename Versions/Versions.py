@@ -1,6 +1,9 @@
-import CompositeStandard as cs
-from CompositeStandard import *
+from CompoST import CompositeStandard as cs
 from jsonic import serialize, deserialize
+
+
+#THIS CURRENTLY DOES NOT WORK #TODO
+#it is intended to help users move old CompoST data to new versions
 
 #from utils import reLink
 
