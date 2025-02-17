@@ -6,6 +6,7 @@ from CompoST import Utilities
 import numpy as np
 import math
 import os
+import random
 
 #from utils import reLink
 
@@ -35,9 +36,19 @@ def store_FO(path,filename,ply_ID,zone=None):
     if D.allStages == None:
         D.allStages = []
 
-    stNo = len(D.allStages)+1
-    stage = cs.PlyScan(stageID = stNo,sourceSystem = cs.SourceSystem(softwareName = "Polyworks"))
-    D.allStages.append(stage)
+    stageReady = False
+    for st in D.allStages:
+        if st.memberName == "PlyScan":
+            print("PlyScan stage already initiated, FO data will be added.")
+            stage = st
+            stNo = st.stageID
+            stageReady = True
+
+    if stageReady == False:
+        stNo = len(D.allStages)+1
+        stage = cs.Stage(stageID = stNo,sourceSystem = cs.SourceSystem(softwareName = "Polyworks"))
+        D.allStages.append(stage)
+
 
 
     #find spline for the full part (currently for full part)
@@ -118,18 +129,11 @@ def store_FO(path,filename,ply_ID,zone=None):
 
     #save the JSON
     #save as file
-    print("saving as:",path+"\\"+filename+"_withFO.json")
-    with open(path+"\\"+filename+"_withFO.json", 'w') as out_file:
+    print("saving as:",path+"\\"+filename+"_FO.json")
+    with open(path+"\\"+filename+"_FO.json", 'w') as out_file:
         out_file.write(json_str)
 
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
-filename = "x_test_142_tols_wrinkle"
-store_FO(path,filename,ply_ID=int(14))
-
-
-
-import random
 def makingFakeData(file):
     #This allows for generation of synthetic orientation data (as provided by Polyworx) 
 

@@ -61,5 +61,17 @@ print(t2 - t1)
 #TODO THIS IS WHERE WE CONTINUE, VERIFY THE EXAMPLE DATA IS WHERE IT NEEDS TO BE --- THEN STORE IT...!!
 from Orientations_UC.orientations_use_case import store_FO
 
-filename = filename+"_wrinkle"
-store_FO(path,filename,ply_ID=int(15))
+# filename = filename+"_wrinkle"
+# store_FO(path,filename,ply_ID=int(15))
+
+
+
+
+#STEP 7 - display this in CATIA
+from CATIA.CATIA_utils import display_file
+
+with open(path+"\\"+filename+"_wrinkle_FO.json","r") as in_file:
+    json_str= in_file.read()
+
+D = deserialize(json_str,string_input=True)
+display_file(D,disp_mesh=True)

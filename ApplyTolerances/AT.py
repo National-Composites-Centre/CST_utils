@@ -365,7 +365,6 @@ class ToleranceApp:
 
         D = CompoST_file
 
-
         # Create main window
         self.root = tk.Tk()
         self.root.title(f"Tolerance definitions for part: {file}")
