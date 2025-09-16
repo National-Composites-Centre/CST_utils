@@ -1,32 +1,32 @@
 #this module collects utility scripts for importing information from reference files
 from stl import mesh
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
 from pydantic import BaseModel
 from jsonic import serialize, deserialize
 from CATIA.CATIA_utils import CAT_points
 
+#TODO remove commented section, is part of main CompoST installation
+# def clean_json(strin):
+#     #strin = input json string to clean
+#     s = strin.replace("{","\n{\n")
+#     s = s.replace("}","\n}\n")
 
-def clean_json(strin):
-    #strin = input json string to clean
-    s = strin.replace("{","\n{\n")
-    s = s.replace("}","\n}\n")
 
-
-    tabs = 0
-    new_str = ""
-    for line in s.split("\n")[:]:
+#     tabs = 0
+#     new_str = ""
+#     for line in s.split("\n")[:]:
         
-        if "}" in line:
-            tabs = tabs - 1
+#         if "}" in line:
+#             tabs = tabs - 1
 
-        for ii in range(0,tabs):
-            new_str += "   "
-        new_str += line+"\n"
+#         for ii in range(0,tabs):
+#             new_str += "   "
+#         new_str += line+"\n"
 
-        if "{" in line:
-            tabs = tabs + 1
-    #returns a human readable JSON
-    return(new_str)
+#         if "{" in line:
+#             tabs = tabs + 1
+#     #returns a human readable JSON
+#     return(new_str)
 
 
 def import_stl_v1(file):

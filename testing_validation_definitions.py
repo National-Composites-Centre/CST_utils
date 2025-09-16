@@ -1,8 +1,10 @@
 
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
+from CompoST import CompositeStandard
+from CompoST import Utilities
 from jsonic import serialize, deserialize
-from utils import reLink
-from STL.file_utils import clean_json
+#from utils import reLink
+#from STL.file_utils import clean_json
 
 
 def AddSomeAxis(path,filename):
@@ -14,7 +16,7 @@ def AddSomeAxis(path,filename):
     D = deserialize(json_str,string_input=True)
 
     #re-link - if relevant
-    D = reLink(D)
+    D = Utilities.reLink(D)
 
     pt0 = cs.Point(x=0,y=0,z=0)
     pt1 = cs.Point(x=10,y=0,z=0)
@@ -27,11 +29,11 @@ def AddSomeAxis(path,filename):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #save the JSON
     #save as file
-    print("saving as:",path+"\\"+filename+".json")
+    print("saving as:",path+"\\"+filename+"_layup_plus_axis.json")
     with open(path+"\\"+filename+"_layup_plus_axis.json", 'w') as out_file:
         out_file.write(json_str)
 
@@ -47,7 +49,7 @@ def PredefineStages(path,filename):
     D = deserialize(json_str,string_input=True)
 
     #re-link - if relevant
-    D = reLink(D)
+    D = Utilities.reLink(D)
 
     if D.allStages == None:
         D.allStages = []
@@ -62,7 +64,7 @@ def PredefineStages(path,filename):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #save the JSON
     #save as file
@@ -82,7 +84,7 @@ def TestIDMat():
     D = deserialize(json_str,string_input=True)
 
     #re-link - if relevant
-    D = reLink(D)
+    D = Utilities.reLink(D)
 
     D.allMaterials[0].E1 = 200000
 
@@ -97,5 +99,5 @@ def TestIDMat():
 # #AddSomeAxis(path,filename)
 # PredefineStages(path,filename)
 
-x = TestIDMat()
-print(x)
+#x = TestIDMat()
+#print(x)

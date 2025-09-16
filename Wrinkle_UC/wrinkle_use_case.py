@@ -2,13 +2,16 @@
 from jsonic import serialize, deserialize
 
 #from CATIA.CATIA_utils import CAT_points
-from STL.file_utils import import_stl_v1, clean_json
+from STL.file_utils import import_stl_v1
 from STL.mts import MTS, meshToSpline, MTS_np, meshToSpline_np, meshToSpline_o3d, mtSimple
-import CompositeStandard as cs
+from CompoST import CompositeStandard as cs
+from CompoST import CompositeStandard
+from CompoST import Utilities
 import h5py
 
 import numpy as np
-from utils import reLink
+import time
+#from utils import reLink
 
 def save_to_hdf5(obj, file_name):
     
@@ -46,7 +49,7 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
     #turn file into workable classes
     D = deserialize(json_str,string_input=True)
     
-    D = reLink(D) #TODO UNTESTED - CHECK IT WORKS
+    D = Utilities.reLink(D) 
 
     #Open csv with wrinkle info (TODO store directly to CompoST)
     with open(path+"\\"+filename+"_wrinkle.csv","r") as exc:
@@ -57,7 +60,7 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
     if D.allStages == None:
         D.allStages = []
 
-    stage = cs.PlyScan(stageID = len(D.allStages)+1,sourceSystem = cs.SourceSystem(softwareName = "Polyworks"))
+    stage = cs.Stage(memberName = "PlyScan",stageID = len(D.allStages)+1,source = cs.SourceSystem(softwareName = "Polyworks"))
     D.allStages.append(stage)
 
     
@@ -159,7 +162,7 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #save the JSON
     #save as file
@@ -175,16 +178,16 @@ def store_wrinkle(path,filename,meshStore = False, splStore = False):
 #binary choise weather slipe should be generated to delimit defects
 #splStore = False
 
-import time
-t1 = time.perf_counter()
+# import time
+# t1 = time.perf_counter()
 
-#path = "D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized_bench_v70d\\"
-#filename = "WO4502"
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
-filename = "x_test_142_tols"
-store_wrinkle(path,filename,splStore = True,meshStore = False)
+# #path = "D:\\CAD_library_sampling\\CompoST_examples\\WO4502_minimized_bench_v70d\\"
+# #filename = "WO4502"
+# path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
+# filename = "x_test_142_tols"
+# store_wrinkle(path,filename,splStore = True,meshStore = False)
 
 
-t2 = time.perf_counter()
-print("OVERALL RUNTIME:")
-print(t2 - t1)
+# t2 = time.perf_counter()
+# print("OVERALL RUNTIME:")
+# print(t2 - t1)

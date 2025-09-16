@@ -1,9 +1,14 @@
-import CompositeStandard as cs
-from CompositeStandard import *
-from pydantic import BaseModel
+from CompoST import CompositeStandard as cs
+from CompoST import CompositeStandard
+import CompoST
+#from CompoST import *
+from CompoST.CompositeStandard import *
+from pydantic import BaseModel, Field
+from typing import Optional
 import importlib
-from utils import reLink
-from STL.file_utils import clean_json
+#from utils import reLink
+from CompoST import Utilities
+#from STL.file_utils import clean_json
 from jsonic import serialize, deserialize
 from CATIA.CATIA_utils import display_file, CATIA_ctrl
 import tkinter.messagebox as msg
@@ -12,6 +17,7 @@ import win32com.client.dynamic
 from CATIA.vecEX3 import wrmmm
 
 import math
+import numpy as np
 
 #TKINTER UI
 import tkinter as tk
@@ -44,7 +50,9 @@ class TolLine(BaseModel):
 def tol_list():
     #initiate empty list
     #class_names = [name for name, obj in globals().items() if isinstance(obj, type)]
+    
     class_types = [obj for name, obj in globals().items() if isinstance(obj, type)]
+    #print(class_types)
 
     tolOptions = []
     #print(class_types)
@@ -52,7 +60,7 @@ def tol_list():
         for e in c.__mro__:
             if e == cs.Tolerance:
                 #avoid Tolerance parent class itself
-                if str(c) != """<class 'CompositeStandard.Tolerance'>""":
+                if str(c) != """<class 'CompoST.CompositeStandard.Tolerance'>""":
                     tolOptions.append(c)
 
     return(tolOptions)
@@ -101,10 +109,7 @@ def pts100(sp,C,hs,dir = False,no_p = 100):
     return(x)
 
 
-
-
-
-def SaveTols(D,yp_list):
+def SaveTols(D,yp_list,path, filename,self):
 
     #first check relimitation references which could be stored in local
 
@@ -118,7 +123,7 @@ def SaveTols(D,yp_list):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #save the JSON
     #save as file
@@ -165,7 +170,6 @@ def DefineTol(event,yP3_var,yp_list):
             subWin = tk.Tk()
             subWin.title("Specify Parameters")
             subWin.geometry("510x610")
-
 
             my_frame = Frame(subWin, width=500, height=600) 
             my_frame.pack() # Note the parentheses added here
@@ -221,7 +225,7 @@ def DeleteTol(event,yP3_var,yp_list):
 
 
 
-def CreateTwo(D, event,yP2_var,yp_list):
+def CreateTwo(D, event,yP2_var,yp_list,self):
 
     yP2 = yP2_var.get()
     class_selected = event.widget.get()
@@ -232,18 +236,21 @@ def CreateTwo(D, event,yP2_var,yp_list):
 
                 yP3_var = IntVar(value=yP2)
 
-                button1 = ttk.Button(my_frame,text="Define",command= lambda: DefineTol(event,yP3_var,yp_list))
+                button1 = ttk.Button(self.my_frame,text="Define",command= lambda: DefineTol(event,yP3_var,yp_list))
                 button1.place(x=400,y=yP2)
-                button2 = ttk.Button(my_frame,text="Delete",command= lambda: DeleteTol(event,yP3_var,yp_list))  
+                button2 = ttk.Button(self.my_frame,text="Delete",command= lambda: DeleteTol(event,yP3_var,yp_list))  
                 button2.place(x=490,y=yP2)
 
                 o.delete_button = button2
                 o.value_button = button1
 
             #regardless of weather buttons needed generating
-            module_name = "CompositeStandard"
+            module_name = "CompoST.CompositeStandard"
             module = importlib.import_module(module_name)
-            class_name = class_selected.strip("<>").split("'")[1].split('.', 1)[1]
+            print("module",module)
+            class_name = class_selected.strip("<>").split("'")[1].split('.')[2]
+
+            print("class_name",class_name)
             class_ = getattr(module,class_name)
             o.tol_obj = class_()
 
@@ -256,26 +263,26 @@ def CreateTwo(D, event,yP2_var,yp_list):
             D.fileMetadata.maxID += 1
 
 
-def AddTolLine(D,yP_var,yp_list):
+def AddTolLine(D,yP_var,yp_list,self):
 
     yP = yP_var.get()
     yP = yP + 30
     yP_var.set(yP)
 
     yP2_var = IntVar(value=yP)
-    combo = ttk.Combobox(my_frame,state="readonly",values=toll,width=60,height=20)
-    combo.bind("<<ComboboxSelected>>", lambda event: CreateTwo(D,event,yP2_var,yp_list))
+    combo = ttk.Combobox(self.my_frame,state="readonly",values=self.toll,width=60,height=20)
+    combo.bind("<<ComboboxSelected>>", lambda event: CreateTwo(D,event,yP2_var,yp_list,self))
     combo.place(x=0,y=yP)
 
     #create the object
     t = TolLine(main_button = combo,ref_pos=yP)
     yp_list.append(t)
-    button.place(x=20,y=button.winfo_y()+30)
-    buttonS.place(x=20,y=buttonS.winfo_y()+30)
-    button5.place(x=20,y=button5.winfo_y()+30)
+    self.button.place(x=20,y=self.button.winfo_y()+30)
+    self.buttonS.place(x=20,y=self.buttonS.winfo_y()+30)
+    self.button5.place(x=20,y=self.button5.winfo_y()+30)
 
 
-def CAT_selection(rp,yp_list,C):
+def CAT_selection(D,rp,yp_list,C,self):
 
     c_sel = C.doc.Selection
     
@@ -330,18 +337,18 @@ def CAT_selection(rp,yp_list,C):
                     yp.splineRelimitationRef = D.fileMetadata.maxID -1  #recored the ID before edit above
 
 
-def enableCATIA(D,yp_list,filename,path):
+def enableCATIA(D,yp_list,filename,path,self):
     #Enables CATIA selection of objects to use as tolerance delimitation
 
-    if (button5["text"] == "CATIA interactive - detivate"):
-        button5.configure(text = "CATIA interactive - activate")
+    if (self.button5["text"] == "CATIA interactive - detivate"):
+        self.button5.configure(text = "CATIA interactive - activate")
         
     else:
         #ttk pop-up to check the user has started CATIA
         msg.showwarning(title="User interaction",message="Please make sure CATIA is already running with a Part window open, then click ok. (Empty part is fine)")
 
         #TODO switch colour of the button to green
-        button5.configure(text = "CATIA interactive - deactivate")
+        self.button5.configure(text = "CATIA interactive - deactivate")
 
         #load CATIA part
         C = display_file(D)
@@ -350,53 +357,88 @@ def enableCATIA(D,yp_list,filename,path):
         for yp in yp_list:
             #if button not available
             if yp.cat_button == None:
-                yp.cat_button = ttk.Button(my_frame,text="[select]",command = lambda yp=yp: CAT_selection(yp.ref_pos ,yp_list,C))
+                yp.cat_button = ttk.Button(self.my_frame,text="[select]",command = lambda yp=yp: CAT_selection(D,yp.ref_pos ,yp_list,C,self))
                 yp.cat_button.place(x=570,y=yp.ref_pos)
 
+class ToleranceApp:
+    def __init__(self, CompoST_file, file,path):
 
-#currently available tolerance objects
-toll = tol_list()
-#print(toll)
+        D = CompoST_file
 
-path = "D:\\CAD_library_sampling\\CompoST_examples\\TEMPLATE_example_v71a_V1"
-filename = "x_test_142"
-with open(path+"\\"+filename+"_layup_plus_axis.json","r") as in_file:
-    json_str= in_file.read()
+        # Create main window
+        self.root = tk.Tk()
+        self.root.title(f"Tolerance definitions for part: {file}")
+        self.root.geometry("710x610+150+150")
 
-#turn file into workable classes
-D = deserialize(json_str,string_input=True)
+        yP_var = IntVar(value=0)
+        yp_list = []
 
-#re-link - if relevant
-D = reLink(D)
+        self.toll = tol_list()
 
-print(D.fileMetadata.maxID)
+        self.my_frame = Frame(self.root, width=700, height=600) 
+        self.my_frame.pack() # Note the parentheses added here
 
-# create app
-root = tk.Tk()
-root.title("Tolerance definitions for part:  "+filename)
-root.geometry("710x610+150+150")
+        self.root.resizable(True,True)
 
-yP_var = IntVar(value=0)
-yp_list = []
+        #This button adds a line for specifying tolerance, along with the corresponding object
+        self.button = ttk.Button(self.my_frame,text="Add Tolerance Definition",command= lambda: AddTolLine(D,yP_var,yp_list,self))
+        self.button.place(x=20,y=50)
 
-my_frame = Frame(root, width=700, height=600) 
-my_frame.pack() # Note the parentheses added here
+        #This button is used once user is happy with their defined tolerances
+        self.buttonS = ttk.Button(self.my_frame,text="Save All",command = lambda: SaveTols(D,yp_list,path,file,self))
+        self.buttonS.place(x=20,y=80)
 
-root.resizable(True,True)
+        #This button initiates interactive options with CATIA
+        self.button5 = ttk.Button(self.my_frame,text="CATIA interactive - activate", command = lambda: enableCATIA(D,yp_list,file,path,self))
+        self.button5.place(x=20,y=110)
 
-#This button adds a line for specifying tolerance, along with the corresponding object
-button = ttk.Button(my_frame,text="Add Tolerance Definition",command= lambda: AddTolLine(D,yP_var,yp_list))
-button.place(x=20,y=50)
 
-#This button is used once user is happy with their defined tolerances
-buttonS = ttk.Button(my_frame,text="Save All",command = lambda: SaveTols(D,yp_list))
-buttonS.place(x=20,y=80)
+    def run(self):
+        self.root.mainloop()  # Start the Tkinter event loop
 
-#This button initiates interactive options with CATIA
-button5 = ttk.Button(my_frame,text="CATIA interactive - activate", command = lambda: enableCATIA(D,yp_list,filename,path))
-button5.place(x=20,y=110)
+def start_tolerance_app(CompoST_file, file,path=""):
+    app = ToleranceApp(CompoST_file,file, path)
+    app.run()
 
-root.mainloop()
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description='Application to help define tolerances using CATIA geometry.')
+
+    parser.add_argument("path", type=str, help="path to file")
+    parser.add_argument("file", type=str, help="name of file")
+    parser.add_argument("CompoST_file", type=object, help="Compost object")
+    args = parser.parse_args()
+    app = ToleranceApp(args.path, args.file, args.CompoST_file)
+    app.run()
+
+# def AT_UI(D,filename,path=""):
+
+#     # create app
+#     root = tk.Tk()
+#     root.title("Tolerance definitions for part:  "+filename)
+#     root.geometry("710x610+150+150")
+
+#     yP_var = IntVar(value=0)
+#     yp_list = []
+
+#     my_frame = Frame(root, width=700, height=600) 
+#     my_frame.pack() # Note the parentheses added here
+
+#     root.resizable(True,True)
+
+#     #This button adds a line for specifying tolerance, along with the corresponding object
+#     button = ttk.Button(my_frame,text="Add Tolerance Definition",command= lambda: AddTolLine(D,yP_var,yp_list))
+#     button.place(x=20,y=50)
+
+#     #This button is used once user is happy with their defined tolerances
+#     buttonS = ttk.Button(my_frame,text="Save All",command = lambda: SaveTols(D,yp_list))
+#     buttonS.place(x=20,y=80)
+
+#     #This button initiates interactive options with CATIA
+#     button5 = ttk.Button(my_frame,text="CATIA interactive - activate", command = lambda: enableCATIA(D,yp_list,filename,path))
+#     button5.place(x=20,y=110)
+
+#     root.mainloop()
 
 
 

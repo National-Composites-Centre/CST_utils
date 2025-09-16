@@ -1,7 +1,8 @@
 import win32com.client.dynamic
 from jsonic import serialize, deserialize
-import CompositeStandard as cs
-from STL.file_utils import clean_json
+from CompoST import CompositeStandard as cs
+from CompoST import Utilities
+#from STL.file_utils import clean_json
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -156,7 +157,7 @@ def generate_points(no_points = 100):
     json_str = serialize(json_col, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     print("saving as:",path+"\\"+filename+str(no_points)+".json")
     with open(path+"\\"+filename+str(no_points)+".json", 'w') as out_file:
@@ -241,7 +242,7 @@ def load_EOP(path,filename,example_file):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #re-save te file
     print("saving as:",path+"\\"+filename+"_X.json")
@@ -365,7 +366,7 @@ def process_EOP(file):
     json_str = serialize(D, string_output = True)
 
     #clean the JSON
-    json_str = clean_json(json_str)
+    json_str = Utilities.clean_json(json_str)
 
     #re-save te file
     print("saving as:",path+"\\"+filename+"_X.json")
