@@ -1,0 +1,14 @@
+[build-system]
+requires = ["flit_core >=3.2,<4","numpy>=2.3.2","pywin32>=305.1","CompoST @ git+https://github.com/ncc-uk/CompoST.git@main","matplotlib>=3.10.5"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "CST_Utils"
+authors = [{name = "Jakub Kucera"}]
+description = "Various minor WIP tools using CompoST"
+readme = "README.md"
+version = "0.1.0"
+dependencies = ["numpy>=2.3.2","pywin32>=305.1","CompoST @ git+https://github.com/ncc-uk/CompoST.git@main"]
+
+[project.urls]
+Home = "https://github.com/ncc-uk/CST_utils"

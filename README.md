@@ -1,4 +1,4 @@
-# CST_utils
+# CST_utils version 0.1.0
 
 This is a library of small tools that help process CompoST (Composite Standard) files. This standard is presented at https://github.com/National-Composites-Centre/CompoST .
 
@@ -7,3 +7,4 @@ Tools here are not to be actively maintained and might be quite niche, so it was
 Some tools might be migrated to a dediated repository later.
 
 The tools in this repo are documented here: https://ncc-uk.github.io/CST_utils/ , but not all documentation will always be up to data due to developmental nature of this repo.
+
